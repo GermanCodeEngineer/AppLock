@@ -2,10 +2,7 @@ package dev.pranav.applock.features.setpassword.ui
 
 import android.widget.Toast
 import androidx.activity.ComponentActivity
-import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
-import androidx.biometric.BiometricManager
-import androidx.biometric.BiometricPrompt
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -20,14 +17,10 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -37,14 +30,13 @@ import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat
+import androidx.fragment.app.FragmentActivity
 import androidx.navigation.NavController
 import com.mrhwsn.composelock.Dot
 import com.mrhwsn.composelock.LockCallback
 import com.mrhwsn.composelock.PatternLock
 import dev.pranav.applock.AppLockApplication
 import dev.pranav.applock.R
-import dev.pranav.applock.core.navigation.Screen
 import dev.pranav.applock.core.navigation.finishPasswordSetup
 import dev.pranav.applock.core.utils.vibrate
 import dev.pranav.applock.data.repository.PreferencesRepository
@@ -55,19 +47,13 @@ fun PatternSetPasswordScreen(
     navController: NavController,
     isFirstTimeSetup: Boolean
 ) {
-    var patternState by remember { mutableStateOf("") }
-    var confirmPatternState by remember { mutableStateOf("") }
-    var isConfirmationMode by remember { mutableStateOf(false) }
-    var isVerifyOldPasswordMode by remember { mutableStateOf(!isFirstTimeSetup) }
-
-    var showMismatchError by remember { mutableStateOf(false) }
-    var showMinLengthError by remember { mutableStateOf(false) }
-    var showInvalidOldPasswordError by remember { mutableStateOf(false) }
+    val state = rememberSetPasswordState(isFirstTimeSetup)
 
     val minLength = 4
     val context = LocalContext.current
     val resources = LocalResources.current
     val activity = LocalActivity.current as? ComponentActivity
+    val fragmentActivity = LocalActivity.current as? FragmentActivity
     val appLockRepository = remember {
         (context.applicationContext as? AppLockApplication)?.appLockRepository
     }
@@ -77,101 +63,29 @@ fun PatternSetPasswordScreen(
     val screenHeight = windowInfo.containerSize.height
     val isLandscape = screenWidth > screenHeight
 
-    BackHandler {
-        if (isFirstTimeSetup) {
-            if (isConfirmationMode) {
-                isConfirmationMode = false
-            } else {
-                Toast.makeText(context, R.string.set_pin_to_continue_toast, Toast.LENGTH_SHORT)
-                    .show()
-            }
-        } else {
-            if (navController.previousBackStackEntry != null) {
-                navController.popBackStack()
-            } else {
-                activity?.finish()
-            }
-        }
-    }
-
-    val fragmentActivity = LocalActivity.current as? androidx.fragment.app.FragmentActivity
-
-    fun launchDeviceCredentialAuth() {
-        if (fragmentActivity == null) return
-        val executor = ContextCompat.getMainExecutor(context)
-        val promptInfo = BiometricPrompt.PromptInfo.Builder()
-            .setTitle(resources.getString(R.string.authenticate_to_reset_pin_title))
-            .setSubtitle(resources.getString(R.string.use_device_pin_pattern_password_subtitle))
-            .setAllowedAuthenticators(
-                BiometricManager.Authenticators.BIOMETRIC_STRONG or BiometricManager.Authenticators.DEVICE_CREDENTIAL
-            )
-            .build()
-        val biometricPrompt = BiometricPrompt(
-            fragmentActivity, executor,
-            object : BiometricPrompt.AuthenticationCallback() {
-                override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
-                    super.onAuthenticationSucceeded(result)
-                    isVerifyOldPasswordMode = false
-                    patternState = ""
-                    confirmPatternState = ""
-                    showInvalidOldPasswordError = false
-                }
-            })
-        biometricPrompt.authenticate(promptInfo)
-    }
-
-    fun switchToPinMethod() {
-        navController.navigate(Screen.SetPassword.route) {
-            popUpTo(Screen.SetPasswordPattern.route) { inclusive = true }
-        }
-    }
+    SetPasswordBackHandler(
+        state = state,
+        navController = navController,
+        activity = activity,
+        context = context
+    )
 
     fun submitPattern() {
-        val currentPattern = when {
-            isVerifyOldPasswordMode -> patternState
-            isConfirmationMode -> confirmPatternState
-            else -> patternState
-        }
+        state.submit(
+            validateOldPassword = { appLockRepository!!.validatePattern(it) },
+            onSavePassword = { pattern ->
+                appLockRepository?.setLockType(PreferencesRepository.LOCK_TYPE_PATTERN)
+                appLockRepository?.setPattern(pattern)
+                Toast.makeText(
+                    context,
+                    resources.getString(R.string.password_set_successfully_toast),
+                    Toast.LENGTH_SHORT
+                ).show()
 
-        if (currentPattern.length < minLength) {
-            showMinLengthError = true
-            return
-        }
-
-        when {
-            isVerifyOldPasswordMode -> {
-                if (appLockRepository!!.validatePattern(patternState)) {
-                    isVerifyOldPasswordMode = false
-                    patternState = ""
-                    showInvalidOldPasswordError = false
-                } else {
-                    showInvalidOldPasswordError = true
-                    patternState = ""
-                }
-            }
-
-            !isConfirmationMode -> {
-                isConfirmationMode = true
-                showMinLengthError = false
-            }
-
-            else -> {
-                if (patternState == confirmPatternState) {
-                    appLockRepository?.setLockType(PreferencesRepository.LOCK_TYPE_PATTERN)
-                    appLockRepository?.setPattern(patternState)
-                    Toast.makeText(
-                        context,
-                        resources.getString(R.string.password_set_successfully_toast),
-                        Toast.LENGTH_SHORT
-                    ).show()
-
-                    navController.finishPasswordSetup(isFirstTimeSetup)
-                } else {
-                    showMismatchError = true
-                    confirmPatternState = ""
-                }
-            }
-        }
+                navController.finishPasswordSetup(isFirstTimeSetup)
+            },
+            minLength = minLength
+        )
     }
 
     Scaffold(
@@ -182,8 +96,8 @@ fun PatternSetPasswordScreen(
                     title = {
                         Text(
                             text = when {
-                                isVerifyOldPasswordMode -> stringResource(R.string.enter_current_pin_title)
-                                isConfirmationMode -> stringResource(R.string.confirm_pin_title)
+                                state.isVerifyOldPasswordMode -> stringResource(R.string.enter_current_pin_title)
+                                state.isConfirmationMode -> stringResource(R.string.confirm_pin_title)
                                 else -> stringResource(R.string.set_new_pin_title)
                             },
                             style = MaterialTheme.typography.titleMediumEmphasized,
@@ -213,8 +127,8 @@ fun PatternSetPasswordScreen(
                 ) {
                     Text(
                         text = when {
-                            isVerifyOldPasswordMode -> "Enter current Pattern"
-                            isConfirmationMode -> "Confirm pattern"
+                            state.isVerifyOldPasswordMode -> "Enter current Pattern"
+                            state.isConfirmationMode -> "Confirm pattern"
                             else -> "Create a pattern"
                         },
                         style = MaterialTheme.typography.titleMedium,
@@ -223,7 +137,7 @@ fun PatternSetPasswordScreen(
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    if (showMismatchError) {
+                    if (state.showMismatchError) {
                         Text(
                             text = "Incorrect Pattern",
                             color = MaterialTheme.colorScheme.error,
@@ -231,7 +145,7 @@ fun PatternSetPasswordScreen(
                             textAlign = TextAlign.Center
                         )
                     }
-                    if (showMinLengthError) {
+                    if (state.showLengthError) {
                         Text(
                             text = "Patter length should be at least 4",
                             color = MaterialTheme.colorScheme.error,
@@ -239,7 +153,7 @@ fun PatternSetPasswordScreen(
                             textAlign = TextAlign.Center
                         )
                     }
-                    if (showInvalidOldPasswordError) {
+                    if (state.showInvalidOldPasswordError) {
                         Text(
                             text = "Incorrect pattern",
                             color = MaterialTheme.colorScheme.error,
@@ -257,53 +171,27 @@ fun PatternSetPasswordScreen(
                         textAlign = TextAlign.Center
                     )
 
-                    if (isVerifyOldPasswordMode) {
-                        Spacer(modifier = Modifier.height(12.dp))
-                        TextButton(onClick = { launchDeviceCredentialAuth() }) {
-                            Text(stringResource(R.string.reset_using_device_password_button))
-                        }
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    if (!state.isVerifyOldPasswordMode && !state.isConfirmationMode) {
+                        MethodSwitchButtons(
+                            currentMethod = SetPasswordLockMethod.PATTERN,
+                            navController = navController
+                        )
                     }
 
-                    if (isFirstTimeSetup && !isVerifyOldPasswordMode && !isConfirmationMode) {
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            TextButton(onClick = { switchToPinMethod() }) {
-                                Text(stringResource(R.string.use_pin_instead))
-                            }
-                            TextButton(onClick = { navController.navigate(Screen.SetPasswordAlphanumeric.route) }) {
-                                Text(stringResource(R.string.use_password_button))
-                            }
-                        }
-                    }
-
-                    if (isVerifyOldPasswordMode || isConfirmationMode) {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        TextButton(
-                            onClick = {
-                                if (isVerifyOldPasswordMode) {
-                                    if (navController.previousBackStackEntry != null) {
-                                        navController.popBackStack()
-                                    } else {
-                                        activity?.finish()
-                                    }
-                                } else {
-                                    isConfirmationMode = false
-                                    if (!isFirstTimeSetup) {
-                                        isVerifyOldPasswordMode = true
-                                    }
-                                }
-                                patternState = ""
-                                confirmPatternState = ""
-                                showMismatchError = false
-                                showMinLengthError = false
-                                showInvalidOldPasswordError = false
-                            }
-                        ) {
-                            Text(
-                                if (isVerifyOldPasswordMode) stringResource(R.string.cancel_button)
-                                else stringResource(R.string.start_over_button)
+                    SetPasswordBottomActions(
+                        state = state,
+                        navController = navController,
+                        activity = activity,
+                        onLaunchBiometric = {
+                            launchDeviceCredentialAuth(
+                                context = context,
+                                fragmentActivity = fragmentActivity,
+                                onSuccess = { state.onBiometricSuccess() }
                             )
                         }
-                    }
+                    )
                 }
 
                 PatternLock(
@@ -332,13 +220,7 @@ fun PatternSetPasswordScreen(
 
                         override fun onResult(result: List<Dot>) {
                             val patternString = result.joinToString("") { it.id.toString() }
-                            if (isVerifyOldPasswordMode) {
-                                patternState = patternString
-                            } else if (isConfirmationMode) {
-                                confirmPatternState = patternString
-                            } else {
-                                patternState = patternString
-                            }
+                            state.updateCurrentInput(patternString)
                             submitPattern()
                         }
                     }
@@ -358,15 +240,15 @@ fun PatternSetPasswordScreen(
                 ) {
                     Text(
                         text = when {
-                            isVerifyOldPasswordMode -> stringResource(R.string.enter_current_pin_label)
-                            isConfirmationMode -> stringResource(R.string.confirm_new_pin_label)
+                            state.isVerifyOldPasswordMode -> stringResource(R.string.enter_current_pin_label)
+                            state.isConfirmationMode -> stringResource(R.string.confirm_new_pin_label)
                             else -> stringResource(R.string.create_new_pin_label)
                         },
                         style = MaterialTheme.typography.headlineMedium,
                         textAlign = TextAlign.Center
                     )
 
-                    if (showMismatchError) {
+                    if (state.showMismatchError) {
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
                             text = stringResource(R.string.pins_dont_match_error),
@@ -376,7 +258,7 @@ fun PatternSetPasswordScreen(
                         )
                     }
 
-                    if (showMinLengthError) {
+                    if (state.showLengthError) {
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
                             text = "Patter length should be at least 4",
@@ -386,7 +268,7 @@ fun PatternSetPasswordScreen(
                         )
                     }
 
-                    if (showInvalidOldPasswordError) {
+                    if (state.showInvalidOldPasswordError) {
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
                             text = "Incorrect pattern",
@@ -436,13 +318,7 @@ fun PatternSetPasswordScreen(
 
                             override fun onResult(result: List<Dot>) {
                                 val patternString = result.joinToString("") { it.id.toString() }
-                                if (isVerifyOldPasswordMode) {
-                                    patternState = patternString
-                                } else if (isConfirmationMode) {
-                                    confirmPatternState = patternString
-                                } else {
-                                    patternState = patternString
-                                }
+                                state.updateCurrentInput(patternString)
                                 submitPattern()
                             }
                         }
@@ -450,51 +326,25 @@ fun PatternSetPasswordScreen(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    if (!isVerifyOldPasswordMode && !isConfirmationMode) {
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            TextButton(onClick = { switchToPinMethod() }) {
-                                Text(stringResource(R.string.use_pin_instead))
-                            }
-                            TextButton(onClick = { navController.navigate(Screen.SetPasswordAlphanumeric.route) }) {
-                                Text(stringResource(R.string.use_password_button))
-                            }
-                        }
+                    if (!state.isVerifyOldPasswordMode && !state.isConfirmationMode) {
+                        MethodSwitchButtons(
+                            currentMethod = SetPasswordLockMethod.PATTERN,
+                            navController = navController
+                        )
                     }
 
-                    if (isVerifyOldPasswordMode) {
-                        TextButton(onClick = { launchDeviceCredentialAuth() }) {
-                            Text(stringResource(R.string.reset_using_device_password_button))
-                        }
-                    }
-
-                    if (isVerifyOldPasswordMode || isConfirmationMode) {
-                        TextButton(
-                            onClick = {
-                                if (isVerifyOldPasswordMode) {
-                                    if (navController.previousBackStackEntry != null) {
-                                        navController.popBackStack()
-                                    } else {
-                                        activity?.finish()
-                                    }
-                                } else {
-                                    isConfirmationMode = false
-                                    if (!isFirstTimeSetup) {
-                                        isVerifyOldPasswordMode = true
-                                    }
-                                }
-                                patternState = ""
-                                confirmPatternState = ""
-                                showMismatchError = false
-                                showMinLengthError = false
-                                showInvalidOldPasswordError = false
-                            }
-                        ) {
-                            Text(
-                                if (isVerifyOldPasswordMode) stringResource(R.string.cancel_button)
-                                else stringResource(R.string.start_over_button)
+                    SetPasswordBottomActions(
+                        state = state,
+                        navController = navController,
+                        activity = activity,
+                        onLaunchBiometric = {
+                            launchDeviceCredentialAuth(
+                                context = context,
+                                fragmentActivity = fragmentActivity,
+                                onSuccess = { state.onBiometricSuccess() }
                             )
                         }
-                    }
+                    )
                 }
             }
         }
