@@ -79,6 +79,7 @@ fun AppNavHost(navController: NavHostController, startDestination: String) {
 
         composable(Screen.TotpSetupScreen.route) {
             TotpSetupScreen(
+                navController = navController,
                 onFinished = {
                     val previousRoute =
                         navController.previousBackStackEntry

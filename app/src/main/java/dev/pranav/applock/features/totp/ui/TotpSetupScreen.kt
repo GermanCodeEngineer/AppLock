@@ -1,6 +1,7 @@
 package dev.pranav.applock.features.totp.ui
 
 import android.graphics.Bitmap
+import android.graphics.Color
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -46,6 +47,9 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import dev.pranav.applock.features.setpassword.ui.MethodSwitchButtons
+import dev.pranav.applock.features.setpassword.ui.SetPasswordLockMethod
 import dev.pranav.applock.R
 import dev.pranav.applock.features.totp.data.TotpSecretStore
 import dev.pranav.applock.features.totp.domain.TotpEnrollment
@@ -63,6 +67,7 @@ private enum class SetupStep {
 
 @Composable
 fun TotpSetupScreen(
+    navController: NavController,
     onFinished: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -86,10 +91,8 @@ fun TotpSetupScreen(
     }
 
     LaunchedEffect(Unit) {
-        if (store.isConfigured()) {
-            // Existing setup is intentionally not overwritten automatically.
-            // Start a fresh enrollment only if this screen is explicitly opened.
-        }
+        // Existing setup is intentionally not overwritten automatically.
+        // Start a fresh enrollment only if this screen is explicitly opened.
         createEnrollment()
     }
 
@@ -285,6 +288,14 @@ fun TotpSetupScreen(
                 }
             }
 
+            Spacer(Modifier.height(16.dp))
+
+            MethodSwitchButtons(
+                currentMethod = SetPasswordLockMethod.TOTP,
+                navController = navController,
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+
             Spacer(Modifier.height(24.dp))
         }
     }
@@ -318,7 +329,7 @@ private fun createQrBitmap(
             bitmap.setPixel(
                 x,
                 y,
-                if (matrix[x, y]) android.graphics.Color.BLACK
+                if (matrix.get(x, y)) Color.BLACK
                 else android.graphics.Color.WHITE
             )
         }

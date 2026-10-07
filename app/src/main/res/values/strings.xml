@@ -316,4 +316,21 @@ Make sure you have Shizuku installed and enabled via ADB. Tap \'Next\' to grant 
         If AppLock has helped you, please consider a small donation—any amount means the world to me and keeps this project alive.
         Thank you for believing in my work!
     </string>
+
+    <!-- TotpSetupScreen -->
+    <string name="totp_setup_title">TOTP Setup</string>
+    <string name="totp_setup_scan_title">Scan QR Code</string>
+    <string name="totp_setup_verify_title">Verify Code</string>
+    <string name="totp_setup_scan_description">Scan this QR code with your authenticator app (e.g. Google Authenticator, Authy)</string>
+    <string name="totp_setup_verify_description">Enter the 6-digit code from your authenticator app to complete setup</string>
+    <string name="totp_qr_content_description">TOTP QR Code</string>
+    <string name="totp_manual_setup_label">Manual Setup Key</string>
+    <string name="totp_copy_secret">Copy Secret</string>
+    <string name="totp_secret_warning">Save this secret key in a secure place. If you lose access to your authenticator app, you will need this to recover.</string>
+    <string name="totp_continue_button">Continue</string>
+    <string name="totp_generate_new_button">Generate New Secret</string>
+    <string name="totp_code_label">Verification Code</string>
+    <string name="totp_invalid_code_error">Invalid verification code. Please try again.</string>
+    <string name="totp_finish_button">Finish Setup</string>
+    <string name="totp_back_to_qr_button">Back to QR Code</string>
 </resources>

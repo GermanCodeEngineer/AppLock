@@ -29,7 +29,8 @@ import dev.pranav.applock.core.navigation.Screen
 enum class SetPasswordLockMethod {
     PIN,
     PATTERN,
-    PASSWORD
+    PASSWORD,
+    TOTP
 }
 
 class SetPasswordState(
@@ -212,10 +213,11 @@ fun MethodSwitchButtons(
                 onClick = {
                     navController.navigate(Screen.SetPassword.route) {
                         popUpTo(
-                            if (currentMethod == SetPasswordLockMethod.PATTERN) {
-                                Screen.SetPasswordPattern.route
-                            } else {
-                                Screen.SetPasswordAlphanumeric.route
+                            when (currentMethod) {
+                                SetPasswordLockMethod.PIN -> Screen.SetPassword.route
+                                SetPasswordLockMethod.PATTERN -> Screen.SetPasswordPattern.route
+                                SetPasswordLockMethod.PASSWORD -> Screen.SetPasswordAlphanumeric.route
+                                SetPasswordLockMethod.TOTP -> Screen.TotpSetupScreen.route
                             }
                         ) {
                             inclusive = true
@@ -247,20 +249,14 @@ fun MethodSwitchButtons(
             }
         }
 
-        /*
-         * TOTP is intentionally a separate setup flow rather than a
-         * SetPasswordLockMethod. It has different persistence and
-         * verification semantics from PIN/pattern/password.
-         *
-         * This button is shown only while the user is choosing a new
-         * authentication method, never while verifying the old method.
-         */
-        TextButton(
-            onClick = {
-                navController.navigate(Screen.TotpSetupScreen.route)
+        if (currentMethod != SetPasswordLockMethod.TOTP) {
+            TextButton(
+                onClick = {
+                    navController.navigate(Screen.TotpSetupScreen.route)
+                }
+            ) {
+                Text("Use authenticator")
             }
-        ) {
-            Text("Use authenticator")
         }
     }
 }
