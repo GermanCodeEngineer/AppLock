@@ -2,6 +2,7 @@ package dev.pranav.applock.core.navigation
 
 import android.content.Context
 import dev.pranav.applock.features.appintro.domain.AppIntroManager
+import dev.pranav.applock.features.totp.data.TotpSecretStore
 
 /**
  * Manages navigation logic and routing decisions for the application.
@@ -36,8 +37,9 @@ class NavigationManager(private val context: Context) {
 
         val hasPin = appLockPrefs.getString(PASSWORD_KEY, null) != null
         val hasPattern = appLockPrefs.getString(PATTERN_KEY, null) != null
+        val hasTotp = TotpSecretStore(context).isConfigured()
 
-        return (hasPin || hasPattern)
+        return (hasPin || hasPattern || hasTotp)
     }
 
     companion object {

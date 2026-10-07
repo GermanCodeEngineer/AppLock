@@ -48,6 +48,8 @@ import androidx.lifecycle.lifecycleScope
 import dev.pranav.applock.R
 import dev.pranav.applock.core.ui.shapes
 import dev.pranav.applock.core.utils.appLockRepository
+import dev.pranav.applock.features.totp.data.TotpSecretStore
+import dev.pranav.applock.features.totp.domain.TotpService
 import dev.pranav.applock.core.utils.vibrate
 import dev.pranav.applock.data.repository.AppLockRepository
 import dev.pranav.applock.data.repository.PreferencesRepository
@@ -216,6 +218,31 @@ class PasswordOverlayActivity: FragmentActivity() {
                                 lockedAppName = appName,
                                 triggeringPackageName = triggeringPackageNameFromIntent,
                                 onPasswordAttempt = onPinAttemptCallback,
+                                showCloseButton = true,
+                                onClose = { finish() }
+                            )
+                        }
+
+                        PreferencesRepository.LOCK_TYPE_TOTP -> {
+                            TotpPasswordOverlayScreen(
+                                modifier = Modifier.padding(innerPadding),
+                                showBiometricButton = appLockRepository.isBiometricAuthEnabled(),
+                                fromMainActivity = false,
+                                onBiometricAuth = { triggerBiometricPrompt() },
+                                onAuthSuccess = {},
+                                lockedAppName = appName,
+                                triggeringPackageName = triggeringPackageNameFromIntent,
+                                onTotpAttempt = { code ->
+                                    val secret = TotpSecretStore(this).getSecret()
+                                    val isValid = secret != null && TotpService.verify(secret, code)
+                                    if (isValid) {
+                                        lockedPackageNameFromIntent?.let { pkgName ->
+                                            AppLockManager.unlockApp(pkgName)
+                                            finishAfterTransition()
+                                        }
+                                    }
+                                    isValid
+                                },
                                 showCloseButton = true,
                                 onClose = { finish() }
                             )

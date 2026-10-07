@@ -24,6 +24,7 @@ import dev.pranav.applock.features.applist.ui.MainScreen
 import dev.pranav.applock.features.lockscreen.ui.AlphanumericPasswordOverlayScreen
 import dev.pranav.applock.features.lockscreen.ui.PatternLockScreen
 import dev.pranav.applock.features.lockscreen.ui.PinPasswordOverlayScreen
+import dev.pranav.applock.features.lockscreen.ui.TotpPasswordOverlayScreen
 import dev.pranav.applock.features.setpassword.ui.AlphanumericSetPasswordScreen
 import dev.pranav.applock.features.setpassword.ui.PatternSetPasswordScreen
 import dev.pranav.applock.features.setpassword.ui.SetPasswordScreen
@@ -124,6 +125,20 @@ fun AppNavHost(navController: NavHostController, startDestination: String) {
 
                 PreferencesRepository.LOCK_TYPE_PASSWORD -> {
                     AlphanumericPasswordOverlayScreen(
+                        showBiometricButton =
+                            application.appLockRepository.isBiometricAuthEnabled(),
+                        fromMainActivity = true,
+                        onBiometricAuth = {
+                            handleBiometricAuthentication(context, navController)
+                        },
+                        onAuthSuccess = {
+                            handleAuthenticationSuccess(navController)
+                        }
+                    )
+                }
+
+                PreferencesRepository.LOCK_TYPE_TOTP -> {
+                    TotpPasswordOverlayScreen(
                         showBiometricButton =
                             application.appLockRepository.isBiometricAuthEnabled(),
                         fromMainActivity = true,

@@ -51,6 +51,7 @@ import androidx.navigation.NavController
 import dev.pranav.applock.features.setpassword.ui.MethodSwitchButtons
 import dev.pranav.applock.features.setpassword.ui.SetPasswordLockMethod
 import dev.pranav.applock.R
+import dev.pranav.applock.data.repository.PreferencesRepository
 import dev.pranav.applock.features.totp.data.TotpSecretStore
 import dev.pranav.applock.features.totp.domain.TotpEnrollment
 import dev.pranav.applock.features.totp.domain.TotpService
@@ -261,6 +262,7 @@ fun TotpSetupScreen(
 
                         if (valid) {
                             store.saveSecret(currentEnrollment.secret)
+                            PreferencesRepository(context).setLockType(PreferencesRepository.LOCK_TYPE_TOTP)
                             onFinished()
                         } else {
                             verificationError = true
@@ -330,7 +332,7 @@ private fun createQrBitmap(
                 x,
                 y,
                 if (matrix.get(x, y)) Color.BLACK
-                else android.graphics.Color.WHITE
+                else Color.WHITE
             )
         }
     }

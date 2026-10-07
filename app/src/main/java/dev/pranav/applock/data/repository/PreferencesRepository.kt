@@ -197,5 +197,6 @@ class PreferencesRepository(context: Context) {
         const val LOCK_TYPE_PIN = "pin"
         const val LOCK_TYPE_PATTERN = "pattern"
         const val LOCK_TYPE_PASSWORD = "password"
+        const val LOCK_TYPE_TOTP = "totp"
     }
 }
