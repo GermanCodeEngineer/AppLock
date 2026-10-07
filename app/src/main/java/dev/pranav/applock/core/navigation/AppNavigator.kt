@@ -28,6 +28,7 @@ import dev.pranav.applock.features.setpassword.ui.AlphanumericSetPasswordScreen
 import dev.pranav.applock.features.setpassword.ui.PatternSetPasswordScreen
 import dev.pranav.applock.features.setpassword.ui.SetPasswordScreen
 import dev.pranav.applock.features.settings.ui.SettingsScreen
+import dev.pranav.applock.features.totp.ui.TotpSetupScreen
 import dev.pranav.applock.features.triggerexclusions.ui.TriggerExclusionsScreen
 
 @Composable
@@ -76,6 +77,24 @@ fun AppNavHost(navController: NavHostController, startDestination: String) {
             AlphanumericSetPasswordScreen(navController, isFirstTimeSetup = true)
         }
 
+        composable(Screen.TotpSetupScreen.route) {
+            TotpSetupScreen(
+                onFinished = {
+                    val previousRoute =
+                        navController.previousBackStackEntry
+                            ?.destination
+                            ?.route
+
+                    val isFirstTimeSetup = previousRoute == Screen.AppIntro.route ||
+                        previousRoute == Screen.SetPassword.route ||
+                        previousRoute == Screen.SetPasswordPattern.route ||
+                        previousRoute == Screen.SetPasswordAlphanumeric.route
+
+                    navController.finishPasswordSetup(isFirstTimeSetup)
+                }
+            )
+        }
+
         composable(Screen.Main.route) {
             MainScreen(navController)
         }
@@ -89,7 +108,8 @@ fun AppNavHost(navController: NavHostController, startDestination: String) {
                     PatternLockScreen(
                         fromMainActivity = true,
                         onPatternAttempt = { pattern ->
-                            val isValid = application.appLockRepository.validatePattern(pattern)
+                            val isValid =
+                                application.appLockRepository.validatePattern(pattern)
                             if (isValid) {
                                 handleAuthenticationSuccess(navController)
                             }
@@ -103,7 +123,8 @@ fun AppNavHost(navController: NavHostController, startDestination: String) {
 
                 PreferencesRepository.LOCK_TYPE_PASSWORD -> {
                     AlphanumericPasswordOverlayScreen(
-                        showBiometricButton = application.appLockRepository.isBiometricAuthEnabled(),
+                        showBiometricButton =
+                            application.appLockRepository.isBiometricAuthEnabled(),
                         fromMainActivity = true,
                         onBiometricAuth = {
                             handleBiometricAuthentication(context, navController)
@@ -116,7 +137,8 @@ fun AppNavHost(navController: NavHostController, startDestination: String) {
 
                 else -> {
                     PinPasswordOverlayScreen(
-                        showBiometricButton = application.appLockRepository.isBiometricAuthEnabled(),
+                        showBiometricButton =
+                            application.appLockRepository.isBiometricAuthEnabled(),
                         fromMainActivity = true,
                         onBiometricAuth = {
                             handleBiometricAuthentication(context, navController)
@@ -171,12 +193,17 @@ private fun handleBiometricAuthentication(
             context,
             executor,
             object : BiometricPrompt.AuthenticationCallback() {
-                override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
+                override fun onAuthenticationError(
+                    errorCode: Int,
+                    errString: CharSequence
+                ) {
                     super.onAuthenticationError(errorCode, errString)
                     Log.w(TAG, "Biometric authentication error: $errString ($errorCode)")
                 }
 
-                override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
+                override fun onAuthenticationSucceeded(
+                    result: BiometricPrompt.AuthenticationResult
+                ) {
                     super.onAuthenticationSucceeded(result)
                     LogUtils.d(TAG, "Biometric authentication succeeded")
                     navigateToMain(navController)
@@ -203,7 +230,7 @@ private fun createBiometricPromptInfo(): BiometricPrompt.PromptInfo {
         .setNegativeButtonText(BIOMETRIC_NEGATIVE_BUTTON)
         .setAllowedAuthenticators(
             BiometricManager.Authenticators.BIOMETRIC_WEAK or
-                    BiometricManager.Authenticators.BIOMETRIC_STRONG
+                BiometricManager.Authenticators.BIOMETRIC_STRONG
         )
         .setConfirmationRequired(false)
         .build()
@@ -219,7 +246,9 @@ private fun handleAuthenticationSuccess(navController: NavHostController) {
 
 private fun navigateToMain(navController: NavHostController) {
     navController.navigate(Screen.Main.route) {
-        popUpTo(Screen.PasswordOverlay.route) { inclusive = true }
+        popUpTo(Screen.PasswordOverlay.route) {
+            inclusive = true
+        }
     }
 }
 

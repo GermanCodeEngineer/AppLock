@@ -167,7 +167,9 @@ fun launchDeviceCredentialAuth(
                 super.onAuthenticationSucceeded(result)
                 onSuccess()
             }
-        })
+        }
+    )
+
     biometricPrompt.authenticate(promptInfo)
 }
 
@@ -206,26 +208,59 @@ fun MethodSwitchButtons(
         modifier = modifier
     ) {
         if (currentMethod != SetPasswordLockMethod.PIN) {
-            TextButton(onClick = {
-                navController.navigate(Screen.SetPassword.route) {
-                    popUpTo(
-                        if (currentMethod == SetPasswordLockMethod.PATTERN) Screen.SetPasswordPattern.route
-                        else Screen.SetPasswordAlphanumeric.route
-                    ) { inclusive = true }
+            TextButton(
+                onClick = {
+                    navController.navigate(Screen.SetPassword.route) {
+                        popUpTo(
+                            if (currentMethod == SetPasswordLockMethod.PATTERN) {
+                                Screen.SetPasswordPattern.route
+                            } else {
+                                Screen.SetPasswordAlphanumeric.route
+                            }
+                        ) {
+                            inclusive = true
+                        }
+                    }
                 }
-            }) {
+            ) {
                 Text(stringResource(R.string.use_pin_instead))
             }
         }
+
         if (currentMethod != SetPasswordLockMethod.PATTERN) {
-            TextButton(onClick = { navController.navigate(Screen.SetPasswordPattern.route) }) {
+            TextButton(
+                onClick = {
+                    navController.navigate(Screen.SetPasswordPattern.route)
+                }
+            ) {
                 Text(stringResource(R.string.use_pattern_button))
             }
         }
+
         if (currentMethod != SetPasswordLockMethod.PASSWORD) {
-            TextButton(onClick = { navController.navigate(Screen.SetPasswordAlphanumeric.route) }) {
+            TextButton(
+                onClick = {
+                    navController.navigate(Screen.SetPasswordAlphanumeric.route)
+                }
+            ) {
                 Text(stringResource(R.string.use_password_button))
             }
+        }
+
+        /*
+         * TOTP is intentionally a separate setup flow rather than a
+         * SetPasswordLockMethod. It has different persistence and
+         * verification semantics from PIN/pattern/password.
+         *
+         * This button is shown only while the user is choosing a new
+         * authentication method, never while verifying the old method.
+         */
+        TextButton(
+            onClick = {
+                navController.navigate(Screen.TotpSetupScreen.route)
+            }
+        ) {
+            Text("Use authenticator")
         }
     }
 }
@@ -253,8 +288,11 @@ fun SetPasswordBottomActions(
                 onClick = { state.resetToStart(navController, activity) }
             ) {
                 Text(
-                    if (state.isVerifyOldPasswordMode) stringResource(R.string.cancel_button)
-                    else stringResource(R.string.start_over_button)
+                    if (state.isVerifyOldPasswordMode) {
+                        stringResource(R.string.cancel_button)
+                    } else {
+                        stringResource(R.string.start_over_button)
+                    }
                 )
             }
         }

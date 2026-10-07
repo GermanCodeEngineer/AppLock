@@ -74,7 +74,8 @@ dependencies {
     implementation(libs.hiddenapibypass)
     implementation(project(":patternlock"))
 
-
+    implementation("dev.samstevens.totp:totp:1.7.1")
+    implementation("com.google.zxing:core:3.5.3")
 
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)

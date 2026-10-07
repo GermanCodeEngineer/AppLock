@@ -5,6 +5,7 @@ sealed class Screen(val route: String) {
     object SetPassword : Screen("set_password")
     object SetPasswordPattern : Screen("set_password_pattern")
     object SetPasswordAlphanumeric : Screen("set_password_alphanumeric")
+    object TotpSetupScreen: Screen("totp_setup")
     object ChangePassword : Screen("change_password")
     object Main : Screen("main")
     object PasswordOverlay : Screen("password_overlay")
