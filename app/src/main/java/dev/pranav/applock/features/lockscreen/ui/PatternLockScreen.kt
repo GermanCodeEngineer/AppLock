@@ -111,9 +111,9 @@ fun PatternLockScreen(
                         ) {
                             Text(
                                 text = if (!fromMainActivity && !lockedAppName.isNullOrEmpty())
-                                    "Continue to $lockedAppName"
+                                    "Enter Pattern for $lockedAppName"
                                 else
-                                    stringResource(R.string.enter_pattern_to_continue),
+                                    "Draw Pattern",
                                 style = MaterialTheme.typography.titleMedium,
                                 color = MaterialTheme.colorScheme.onSurface,
                                 textAlign = TextAlign.Center
@@ -183,9 +183,9 @@ fun PatternLockScreen(
                     ) {
                         Text(
                             text = if (!fromMainActivity && !lockedAppName.isNullOrEmpty())
-                                "Continue to $lockedAppName"
+                                "Enter Pattern for $lockedAppName"
                             else
-                                stringResource(R.string.enter_pattern_to_continue),
+                                "Draw Pattern",
                             style = MaterialTheme.typography.headlineMedium,
                             color = MaterialTheme.colorScheme.onSurface,
                             textAlign = TextAlign.Center

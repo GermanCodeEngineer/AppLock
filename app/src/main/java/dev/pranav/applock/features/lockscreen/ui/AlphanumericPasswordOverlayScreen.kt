@@ -111,9 +111,9 @@ fun AlphanumericPasswordOverlayScreen(
             ) {
                 Text(
                     text = if (!fromMainActivity && !lockedAppName.isNullOrEmpty())
-                        "Continue to $lockedAppName"
+                        "Enter Password for $lockedAppName"
                     else
-                        stringResource(R.string.enter_password_to_continue),
+                        "Enter Password",
                     style = MaterialTheme.typography.headlineMediumEmphasized,
                     textAlign = TextAlign.Center
                 )

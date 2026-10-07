@@ -19,7 +19,7 @@ object TotpService {
     private const val ISSUER = "AppLock"
     private const val LABEL = "AppLock"
     private const val DIGITS = 6
-    private const val PERIOD_SECONDS = 100
+    private const val PERIOD_SECONDS = 30
 
     fun createEnrollment(): TotpEnrollment {
         val secret = DefaultSecretGenerator(32).generate()

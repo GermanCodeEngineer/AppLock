@@ -52,6 +52,8 @@ import dev.pranav.applock.features.setpassword.ui.MethodSwitchButtons
 import dev.pranav.applock.features.setpassword.ui.SetPasswordLockMethod
 import dev.pranav.applock.R
 import dev.pranav.applock.data.repository.PreferencesRepository
+import dev.pranav.applock.features.lockscreen.ui.KeypadSection
+import dev.pranav.applock.features.lockscreen.ui.PasswordIndicators
 import dev.pranav.applock.features.totp.data.TotpSecretStore
 import dev.pranav.applock.features.totp.domain.TotpEnrollment
 import dev.pranav.applock.features.totp.domain.TotpService
@@ -228,60 +230,92 @@ fun TotpSetupScreen(
                     Text(stringResource(R.string.totp_generate_new_button))
                 }
             } else {
-                OutlinedTextField(
-                    value = verificationCode,
-                    onValueChange = {
-                        verificationCode = it.filter(Char::isDigit).take(6)
-                        verificationError = false
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    label = { Text(stringResource(R.string.totp_code_label)) },
-                    supportingText = {
-                        if (verificationError) {
-                            Text(
-                                stringResource(R.string.totp_invalid_code_error),
-                                color = MaterialTheme.colorScheme.error
-                            )
-                        }
-                    },
-                    isError = verificationError,
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Number
-                    ),
-                    singleLine = true
+                Text(
+                    text = stringResource(R.string.totp_setup_verify_description),
+                    style = MaterialTheme.typography.bodyMedium,
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
                 Spacer(Modifier.height(24.dp))
 
-                Button(
-                    onClick = {
-                        val valid = TotpService.verify(
-                            currentEnrollment.secret,
-                            verificationCode
-                        )
+                PasswordIndicators(
+                    passwordLength = verificationCode.length
+                )
 
+                if (verificationError) {
+                    Text(
+                        text = stringResource(R.string.totp_invalid_code_error),
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
+                }
+
+                Spacer(Modifier.height(24.dp))
+
+                val codeState = remember(verificationCode) { mutableStateOf(verificationCode) }
+
+                LaunchedEffect(verificationCode) {
+                    if (codeState.value != verificationCode) {
+                        codeState.value = verificationCode
+                    }
+                }
+
+                KeypadSection(
+                    passwordState = codeState,
+                    minLength = 6,
+                    showBiometricButton = false,
+                    fromMainActivity = true,
+                    onBiometricAuth = {},
+                    onAuthSuccess = {},
+                    onPinAttempt = { code ->
+                        val valid = TotpService.verify(currentEnrollment.secret, code)
                         if (valid) {
                             store.saveSecret(currentEnrollment.secret)
                             PreferencesRepository(context).setLockType(PreferencesRepository.LOCK_TYPE_TOTP)
                             onFinished()
                         } else {
                             verificationError = true
+                            verificationCode = ""
+                            codeState.value = ""
+                        }
+                        valid
+                    },
+                    onPasswordChange = {
+                        verificationError = false
+                        verificationCode = codeState.value
+                        if (codeState.value.length > 6) {
+                            codeState.value = codeState.value.take(6)
+                            verificationCode = codeState.value
+                        }
+                        if (codeState.value.length == 6) {
+                            val valid = TotpService.verify(currentEnrollment.secret, codeState.value)
+                            if (valid) {
+                                store.saveSecret(currentEnrollment.secret)
+                                PreferencesRepository(context).setLockType(PreferencesRepository.LOCK_TYPE_TOTP)
+                                onFinished()
+                            } else {
+                                verificationError = true
+                                verificationCode = ""
+                                codeState.value = ""
+                            }
                         }
                     },
-                    enabled = verificationCode.length == 6,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Icon(Icons.Default.Check, contentDescription = null)
-                    Spacer(Modifier.padding(4.dp))
-                    Text(stringResource(R.string.totp_finish_button))
-                }
+                    onPinIncorrect = {
+                        verificationError = true
+                        verificationCode = ""
+                        codeState.value = ""
+                    }
+                )
 
-                Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(16.dp))
 
                 OutlinedButton(
                     onClick = {
                         step = SetupStep.SHOW_SECRET
                         verificationCode = ""
+                        codeState.value = ""
                         verificationError = false
                     },
                     modifier = Modifier.fillMaxWidth()
