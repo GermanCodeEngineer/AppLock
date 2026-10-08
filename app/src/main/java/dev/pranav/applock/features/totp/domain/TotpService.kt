@@ -19,7 +19,7 @@ object TotpService {
     private const val ISSUER = "AppLock"
     private const val LABEL = "AppLock"
     private const val DIGITS = 6
-    private const val PERIOD_SECONDS = 30
+    const val PERIOD_SECONDS = 100
 
     fun createEnrollment(): TotpEnrollment {
         val secret = DefaultSecretGenerator(32).generate()
@@ -52,8 +52,7 @@ object TotpService {
         )
 
         verifier.setTimePeriod(PERIOD_SECONDS)
-        // Allow +/- one 100-second time step for normal device-clock drift.
-        verifier.setAllowedTimePeriodDiscrepancy(1)
+        verifier.setAllowedTimePeriodDiscrepancy(2)
 
         return verifier.isValidCode(secret, normalizedCode)
     }

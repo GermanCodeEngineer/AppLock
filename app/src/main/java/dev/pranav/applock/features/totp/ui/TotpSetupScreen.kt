@@ -2,6 +2,7 @@ package dev.pranav.applock.features.totp.ui
 
 import android.graphics.Bitmap
 import android.graphics.Color
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -170,7 +171,34 @@ fun TotpSetupScreen(
                     }
                 }
 
-                Spacer(Modifier.height(20.dp))
+                Spacer(Modifier.height(16.dp))
+
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "Authenticator Configuration",
+                            style = MaterialTheme.typography.titleSmall
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            text = "Algorithm: SHA-1  •  Digits: 6  •  Period: ${TotpService.PERIOD_SECONDS}s",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
+
+                Spacer(Modifier.height(16.dp))
 
                 Text(
                     text = stringResource(R.string.totp_manual_setup_label),
@@ -230,13 +258,6 @@ fun TotpSetupScreen(
                     Text(stringResource(R.string.totp_generate_new_button))
                 }
             } else {
-                Text(
-                    text = stringResource(R.string.totp_setup_verify_description),
-                    style = MaterialTheme.typography.bodyMedium,
-                    textAlign = TextAlign.Center,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-
                 Spacer(Modifier.height(24.dp))
 
                 PasswordIndicators(
@@ -274,6 +295,7 @@ fun TotpSetupScreen(
                         if (valid) {
                             store.saveSecret(currentEnrollment.secret)
                             PreferencesRepository(context).setLockType(PreferencesRepository.LOCK_TYPE_TOTP)
+                            Log.d("TotpSetupScreen", "Saved TOTP secret and set lockType to: ${PreferencesRepository(context).getLockType()}")
                             onFinished()
                         } else {
                             verificationError = true
@@ -294,6 +316,7 @@ fun TotpSetupScreen(
                             if (valid) {
                                 store.saveSecret(currentEnrollment.secret)
                                 PreferencesRepository(context).setLockType(PreferencesRepository.LOCK_TYPE_TOTP)
+                                Log.d("TotpSetupScreen", "Saved TOTP secret and set lockType to: ${PreferencesRepository(context).getLockType()}")
                                 onFinished()
                             } else {
                                 verificationError = true

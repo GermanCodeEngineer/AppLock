@@ -173,6 +173,7 @@ class PasswordOverlayActivity: FragmentActivity() {
                     contentColor = MaterialTheme.colorScheme.primaryContainer
                 ) { innerPadding ->
                     val lockType = appLockRepository.getLockType()
+                    Log.d("PasswordOverlayActivity", "getLockType() returned: '$lockType'")
                     when (lockType) {
                         PreferencesRepository.LOCK_TYPE_PATTERN -> {
                             PatternLockScreen(
