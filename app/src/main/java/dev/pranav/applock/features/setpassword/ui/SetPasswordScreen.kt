@@ -16,8 +16,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.QrCode2
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -47,6 +50,7 @@ import dev.pranav.applock.core.navigation.finishPasswordSetup
 import dev.pranav.applock.data.repository.PreferencesRepository
 import dev.pranav.applock.features.lockscreen.ui.KeypadRow
 import dev.pranav.applock.features.lockscreen.ui.PasswordIndicators
+import dev.pranav.applock.features.qr.ui.QrScannerDialog
 import dev.pranav.applock.ui.icons.Backspace
 
 @OptIn(
@@ -67,9 +71,22 @@ fun SetPasswordScreen(
     var showMismatchError by remember { mutableStateOf(false) }
     var showLengthError by remember { mutableStateOf(false) }
     var showInvalidOldPasswordError by remember { mutableStateOf(false) }
+    var showQrScanner by remember { mutableStateOf(false) }
     val minLength = 4
-
     val context = LocalContext.current
+
+    val acceptScannedPin: (String) -> Unit = { scannedValue ->
+        showQrScanner = false
+        if (scannedValue.isNotEmpty() && scannedValue.all(Char::isDigit)) {
+            if (isConfirmationMode) confirmPasswordState = scannedValue else passwordState = scannedValue
+            showMismatchError = false
+            showLengthError = false
+            showInvalidOldPasswordError = false
+        } else {
+            Toast.makeText(context, R.string.qr_pin_must_be_numeric, Toast.LENGTH_SHORT).show()
+        }
+    }
+
     val activity = LocalActivity.current as? ComponentActivity
     val appLockRepository = remember {
         (context.applicationContext as? AppLockApplication)?.appLockRepository
@@ -302,6 +319,10 @@ fun SetPasswordScreen(
                     verticalArrangement = Arrangement.spacedBy(buttonSpacing),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
+                    TextButton(onClick = { showQrScanner = true }) {
+                        Icon(Icons.Default.QrCode2, contentDescription = null)
+                        Text(stringResource(R.string.scan_qr_code))
+                    }
                     val onKeyClick: (String) -> Unit = { key ->
                         val currentActivePassword = when {
                             isVerifyOldPasswordMode -> passwordState
@@ -549,6 +570,10 @@ fun SetPasswordScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier.padding(horizontal = horizontalPadding)
                 ) {
+                    TextButton(onClick = { showQrScanner = true }) {
+                        Icon(Icons.Default.QrCode2, contentDescription = null)
+                        Text(stringResource(R.string.scan_qr_code))
+                    }
                     val onKeyClick: (String) -> Unit = { key ->
                         val currentActivePassword = when {
                             isVerifyOldPasswordMode -> passwordState
@@ -666,5 +691,12 @@ fun SetPasswordScreen(
                 }
             }
         }
+    }
+
+    if (showQrScanner) {
+        QrScannerDialog(
+            onQrCodeScanned = acceptScannedPin,
+            onDismiss = { showQrScanner = false }
+        )
     }
 }

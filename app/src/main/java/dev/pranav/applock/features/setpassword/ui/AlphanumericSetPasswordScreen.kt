@@ -18,6 +18,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.filled.QrCode2
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -56,6 +57,7 @@ import dev.pranav.applock.R
 import dev.pranav.applock.core.navigation.Screen
 import dev.pranav.applock.core.navigation.finishPasswordSetup
 import dev.pranav.applock.core.utils.SecurityUtils
+import dev.pranav.applock.features.qr.ui.QrScannerDialog
 import dev.pranav.applock.data.repository.PreferencesRepository
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
@@ -70,6 +72,7 @@ fun AlphanumericSetPasswordScreen(
     var isVerifyOldPasswordMode by remember { mutableStateOf(!isFirstTimeSetup) }
 
     var passwordVisible by remember { mutableStateOf(false) }
+    var showQrScanner by remember { mutableStateOf(false) }
 
     var showMismatchError by remember { mutableStateOf(false) }
     var showLengthError by remember { mutableStateOf(false) }
@@ -249,12 +252,17 @@ fun AlphanumericSetPasswordScreen(
                     imeAction = ImeAction.Done
                 ),
                 trailingIcon = {
-                    val image = if (passwordVisible)
-                        Icons.Filled.Visibility
-                    else Icons.Filled.VisibilityOff
-
-                    IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                        Icon(imageVector = image, contentDescription = null)
+                    Row {
+                        IconButton(onClick = { showQrScanner = true }) {
+                            Icon(
+                                imageVector = Icons.Default.QrCode2,
+                                contentDescription = stringResource(R.string.scan_qr_code)
+                            )
+                        }
+                        val image = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
+                        IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                            Icon(imageVector = image, contentDescription = null)
+                        }
                     }
                 },
                 isError = showMismatchError || showLengthError || showMaxLengthError || showInvalidOldPasswordError,
@@ -329,7 +337,7 @@ fun AlphanumericSetPasswordScreen(
                         Text(stringResource(R.string.use_pattern_button))
                     }
                 }
-                
+
             }
 
             if (isVerifyOldPasswordMode) {
@@ -368,5 +376,20 @@ fun AlphanumericSetPasswordScreen(
                 }
             }
         }
+    }
+
+    if (showQrScanner) {
+        QrScannerDialog(
+            onQrCodeScanned = { scannedValue ->
+                val sanitized = SecurityUtils.sanitizePassword(scannedValue)
+                if (isConfirmationMode) confirmPasswordState = sanitized else passwordState = sanitized
+                showMismatchError = false
+                showLengthError = false
+                showMaxLengthError = false
+                showInvalidOldPasswordError = false
+                showQrScanner = false
+            },
+            onDismiss = { showQrScanner = false }
+        )
     }
 }

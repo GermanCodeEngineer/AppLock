@@ -11,10 +11,14 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.QrCode2
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -30,6 +34,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import dev.pranav.applock.R
+import dev.pranav.applock.features.qr.ui.QrScannerDialog
 
 @Composable
 fun AdminPasswordVerificationDialog(
@@ -40,6 +45,7 @@ fun AdminPasswordVerificationDialog(
     val context = LocalContext.current
     var password by remember { mutableStateOf("") }
     var error by remember { mutableStateOf("") }
+    var showQrScanner by remember { mutableStateOf(false) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -62,18 +68,26 @@ fun AdminPasswordVerificationDialog(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                OutlinedTextField(
-                    value = password,
-                    onValueChange = {
-                        password = it
-                        error = "" // Clear error when user types
-                    },
-                    label = { Text(stringResource(R.string.password_label)) },
-                    visualTransformation = PasswordVisualTransformation(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                    isError = error.isNotEmpty(),
-                    modifier = Modifier.fillMaxWidth()
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    OutlinedTextField(
+                        value = password,
+                        onValueChange = {
+                            password = it
+                            error = ""
+                        },
+                        label = { Text(stringResource(R.string.password_label)) },
+                        visualTransformation = PasswordVisualTransformation(),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                        isError = error.isNotEmpty(),
+                        modifier = Modifier.weight(1f)
+                    )
+                    IconButton(onClick = { showQrScanner = true }) {
+                        Icon(
+                            imageVector = Icons.Default.QrCode2,
+                            contentDescription = stringResource(R.string.scan_qr_code)
+                        )
+                    }
+                }
 
                 if (error.isNotEmpty()) {
                     Text(
@@ -113,4 +127,15 @@ fun AdminPasswordVerificationDialog(
         },
         dismissButton = null
     )
+
+    if (showQrScanner) {
+        QrScannerDialog(
+            onQrCodeScanned = { scannedValue ->
+                password = scannedValue
+                error = ""
+                showQrScanner = false
+            },
+            onDismiss = { showQrScanner = false }
+        )
+    }
 }

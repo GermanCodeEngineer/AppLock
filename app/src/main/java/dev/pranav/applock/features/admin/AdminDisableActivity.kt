@@ -12,6 +12,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.filled.QrCode2
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -34,6 +35,7 @@ import dev.pranav.applock.data.repository.PreferencesRepository
 import dev.pranav.applock.features.lockscreen.ui.KeypadSection
 import dev.pranav.applock.features.lockscreen.ui.PasswordIndicators
 import dev.pranav.applock.features.lockscreen.ui.PatternLockScreen
+import dev.pranav.applock.features.qr.ui.QrScannerDialog
 import dev.pranav.applock.ui.theme.AppLockTheme
 
 class AdminDisableActivity : ComponentActivity() {
@@ -265,6 +267,7 @@ fun AdminDisablePasswordScreen(
         var passwordState by remember { mutableStateOf("") }
         var showError by remember { mutableStateOf(false) }
         var passwordVisible by remember { mutableStateOf(false) }
+        var showQrScanner by remember { mutableStateOf(false) }
         val focusRequester = remember { FocusRequester() }
 
         LaunchedEffect(Unit) {
@@ -300,12 +303,17 @@ fun AdminDisablePasswordScreen(
                     imeAction = ImeAction.Done
                 ),
                 trailingIcon = {
-                    val image = if (passwordVisible)
-                        Icons.Filled.Visibility
-                    else Icons.Filled.VisibilityOff
-
-                    IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                        Icon(imageVector = image, contentDescription = null)
+                    Row {
+                        IconButton(onClick = { showQrScanner = true }) {
+                            Icon(
+                                imageVector = Icons.Default.QrCode2,
+                                contentDescription = stringResource(R.string.scan_qr_code)
+                            )
+                        }
+                        val image = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
+                        IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                            Icon(imageVector = image, contentDescription = null)
+                        }
                     }
                 },
                 isError = showError,
@@ -348,6 +356,17 @@ fun AdminDisablePasswordScreen(
                     Text(stringResource(R.string.verify_button))
                 }
             }
+        }
+
+        if (showQrScanner) {
+            QrScannerDialog(
+                onQrCodeScanned = { scannedValue ->
+                    passwordState = SecurityUtils.sanitizePassword(scannedValue)
+                    showError = false
+                    showQrScanner = false
+                },
+                onDismiss = { showQrScanner = false }
+            )
         }
     }
 }

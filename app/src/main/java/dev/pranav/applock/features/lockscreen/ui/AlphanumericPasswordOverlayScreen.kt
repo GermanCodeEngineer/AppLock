@@ -17,6 +17,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.QrCode2
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
@@ -50,6 +51,7 @@ import androidx.compose.ui.unit.dp
 import dev.pranav.applock.R
 import dev.pranav.applock.core.utils.SecurityUtils
 import dev.pranav.applock.core.utils.appLockRepository
+import dev.pranav.applock.features.qr.ui.QrScannerDialog
 import dev.pranav.applock.ui.icons.Fingerprint
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
@@ -57,6 +59,7 @@ import dev.pranav.applock.ui.icons.Fingerprint
 fun AlphanumericPasswordOverlayScreen(
     modifier: Modifier = Modifier,
     showBiometricButton: Boolean = false,
+    showQrButton: Boolean = true,
     fromMainActivity: Boolean = false,
     showCloseButton: Boolean = false,
     onClose: () -> Unit = {},
@@ -70,6 +73,7 @@ fun AlphanumericPasswordOverlayScreen(
     var passwordState by remember { mutableStateOf("") }
     var showError by remember { mutableStateOf(false) }
     var passwordVisible by remember { mutableStateOf(false) }
+    var showQrScanner by remember { mutableStateOf(false) }
 
     val focusRequester = remember { FocusRequester() }
 
@@ -153,12 +157,19 @@ fun AlphanumericPasswordOverlayScreen(
                         }
                     ),
                     trailingIcon = {
-                        val image = if (passwordVisible)
-                            Icons.Filled.Visibility
-                        else Icons.Filled.VisibilityOff
-
-                        IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                            Icon(imageVector = image, contentDescription = null)
+                        Row {
+                            if (showQrButton) {
+                                IconButton(onClick = { showQrScanner = true }) {
+                                    Icon(
+                                        imageVector = Icons.Default.QrCode2,
+                                        contentDescription = stringResource(R.string.scan_qr_code)
+                                    )
+                                }
+                            }
+                            val image = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
+                            IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                                Icon(imageVector = image, contentDescription = null)
+                            }
                         }
                     },
                     isError = showError,
@@ -222,6 +233,17 @@ fun AlphanumericPasswordOverlayScreen(
                 }
             }
         }
+    }
+
+    if (showQrScanner) {
+        QrScannerDialog(
+            onQrCodeScanned = { scannedValue ->
+                passwordState = SecurityUtils.sanitizePassword(scannedValue)
+                showError = false
+                showQrScanner = false
+            },
+            onDismiss = { showQrScanner = false }
+        )
     }
 
     BackHandler { }

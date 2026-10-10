@@ -28,6 +28,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Close
+import android.widget.Toast
+import androidx.compose.material.icons.filled.QrCode2
+import dev.pranav.applock.features.qr.ui.QrScannerDialog
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -354,6 +357,7 @@ class PasswordOverlayActivity: FragmentActivity() {
 fun PinPasswordOverlayScreen(
     modifier: Modifier = Modifier,
     showBiometricButton: Boolean = false,
+        showQrButton: Boolean = true,
     fromMainActivity: Boolean = false,
     showCloseButton: Boolean = false,
     onClose: () -> Unit = {},
@@ -456,6 +460,8 @@ fun PinPasswordOverlayScreen(
                             passwordState = passwordState,
                             minLength = minLength,
                             showBiometricButton = showBiometricButton,
+                                                        showQrButton = showQrButton,
+                                                    showQrButton = showQrButton,
                             fromMainActivity = fromMainActivity,
                             onBiometricAuth = onBiometricAuth,
                             onAuthSuccess = onAuthSuccess,
@@ -691,6 +697,7 @@ fun KeypadSection(
     passwordState: MutableState<String>,
     minLength: Int,
     showBiometricButton: Boolean,
+        showQrButton: Boolean = true,
     fromMainActivity: Boolean = false,
     onBiometricAuth: () -> Unit,
     onAuthSuccess: () -> Unit,
@@ -699,6 +706,7 @@ fun KeypadSection(
     onPinIncorrect: () -> Unit
 ) {
     val context = LocalContext.current
+        var showQrScanner by remember { mutableStateOf(false) }
     val configuration = LocalConfiguration.current
     val windowInfo = LocalWindowInfo.current
 
@@ -738,12 +746,15 @@ fun KeypadSection(
             isLandscape,
             buttonSpacing,
             horizontalPadding,
-            showBiometricButton
+            showBiometricButton,
+            showQrButton
         ) {
             if (isLandscape) {
                 val availableLandscapeHeight = screenHeightDp * 0.8f
                 val totalVerticalSpacing = buttonSpacing * 3
-                val heightBasedSize = (availableLandscapeHeight - totalVerticalSpacing) / 4f
+                val actionButtonAllowance = if (showBiometricButton || showQrButton) 60.dp else 0.dp
+                val heightBasedSize =
+                    (availableLandscapeHeight - totalVerticalSpacing - actionButtonAllowance) / 4f
 
                 val availableWidth = (screenWidthDp * 0.45f)
                 val totalHorizontalSpacing = buttonSpacing * 2
@@ -759,9 +770,9 @@ fun KeypadSection(
                 val totalVerticalSpacing = buttonSpacing * 3
                 // If biometric button is shown, it takes extra space, but it's floating or above?
                 // In the current layout, it's inside the column at the top.
-                val biometricAllowance = if (showBiometricButton) 60.dp else 0.dp
+                val actionButtonAllowance = if (showBiometricButton || showQrButton) 60.dp else 0.dp
                 val heightBasedSize =
-                    (availableHeight - totalVerticalSpacing - biometricAllowance) / 4f
+                    (availableHeight - totalVerticalSpacing - actionButtonAllowance) / 4f
 
                 minOf(widthBasedSize, heightBasedSize)
             }
@@ -819,20 +830,40 @@ fun KeypadSection(
                 .padding(bottom = 8.dp)
         }
     ) {
-        if (showBiometricButton) {
-            FilledTonalIconButton(
-                onClick = onBiometricAuth,
-                modifier = Modifier.size(44.dp),
-                shape = RoundedCornerShape(40),
+        if (showBiometricButton || showQrButton) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.height(44.dp)
             ) {
-                Icon(
-                    imageVector = Fingerprint,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(10.dp),
-                    contentDescription = stringResource(R.string.biometric_authentication_cd),
-                    tint = MaterialTheme.colorScheme.surfaceTint
-                )
+                if (showBiometricButton) {
+                    FilledTonalIconButton(
+                        onClick = onBiometricAuth,
+                        modifier = Modifier.size(44.dp),
+                        shape = RoundedCornerShape(40),
+                    ) {
+                        Icon(
+                            imageVector = Fingerprint,
+                            modifier = Modifier.fillMaxSize().padding(10.dp),
+                            contentDescription = stringResource(R.string.biometric_authentication_cd),
+                            tint = MaterialTheme.colorScheme.surfaceTint
+                        )
+                    }
+                }
+                if (showQrButton) {
+                    FilledTonalIconButton(
+                        onClick = { showQrScanner = true },
+                        modifier = Modifier.size(44.dp),
+                        shape = RoundedCornerShape(40),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.QrCode2,
+                            modifier = Modifier.fillMaxSize().padding(10.dp),
+                            contentDescription = stringResource(R.string.scan_qr_code),
+                            tint = MaterialTheme.colorScheme.surfaceTint
+                        )
+                    }
+                }
             }
         }
         KeypadRow(
@@ -863,6 +894,26 @@ fun KeypadSection(
             onKeyClick = onSpecialKeyClick,
             buttonSize = buttonSize,
             buttonSpacing = buttonSpacing
+        )
+    }
+    }
+
+    if (showQrScanner) {
+        QrScannerDialog(
+            onQrCodeScanned = { scannedValue ->
+                showQrScanner = false
+                if (scannedValue.isNotEmpty() && scannedValue.all(Char::isDigit)) {
+                    passwordState.value = scannedValue
+                    onPasswordChange()
+                } else {
+                    Toast.makeText(
+                        context,
+                        context.getString(R.string.qr_pin_must_be_numeric),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            },
+            onDismiss = { showQrScanner = false }
         )
     }
 }
