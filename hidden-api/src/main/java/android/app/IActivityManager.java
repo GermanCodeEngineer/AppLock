@@ -107,7 +107,7 @@ public interface IActivityManager {
     /**
      * @deprecated Use {@link #startActivityWithFeature} instead
      */
-
+    @Deprecated
     int startActivity(IApplicationThread caller, String callingPackage, Intent intent,
                       String resolvedType, IBinder resultTo, String resultWho, int requestCode,
                       int flags, ProfilerInfo profilerInfo, Bundle options);
@@ -136,7 +136,7 @@ public interface IActivityManager {
     /**
      * @deprecated Use {@link #broadcastIntentWithFeature} instead
      */
-
+    @Deprecated
     int broadcastIntent(IApplicationThread caller, Intent intent,
                         String resolvedType, IIntentReceiver resultTo, int resultCode,
                         String resultData, Bundle map, String[] requiredPermissions,
@@ -244,7 +244,7 @@ public interface IActivityManager {
     /**
      * @deprecated Use {@link #getIntentSenderWithFeature} instead
      */
-
+    @Deprecated
     IIntentSender getIntentSender(int type, String packageName, IBinder token,
                                   String resultWho, int requestCode, Intent[] intents, String[] resolvedTypes,
                                   int flags, Bundle options, int userId);
@@ -386,7 +386,7 @@ public interface IActivityManager {
     /**
      * @deprecated - Use {@link #removeContentProviderExternalAsUser} which takes a user ID.
      */
-
+    @Deprecated
     void removeContentProviderExternal(String name, IBinder token);
 
     void removeContentProviderExternalAsUser(String name, IBinder token, int userId);
@@ -409,7 +409,7 @@ public interface IActivityManager {
     /**
      * @deprecated Use {startActivityAsUserWithFeature} instead
      */
-
+    @Deprecated
     int startActivityAsUser(IApplicationThread caller, String callingPackage,
                             Intent intent, String resolvedType, IBinder resultTo, String resultWho,
                             int requestCode, int flags, ProfilerInfo profilerInfo,
@@ -578,7 +578,7 @@ public interface IActivityManager {
      * with {@code
      * signature.
      */
-
+    @Deprecated
     boolean unlockUser(int userid, byte[] token, byte[] secret,
                        IProgressListener listener);
 

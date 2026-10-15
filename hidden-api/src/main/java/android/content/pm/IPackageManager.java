@@ -435,6 +435,7 @@ public interface IPackageManager {
      *
      * @deprecated use getSystemSharedLibraryNamesAndPaths() instead
      */
+    @Deprecated
     String[] getSystemSharedLibraryNames();
 
     /**
@@ -495,21 +496,25 @@ public interface IPackageManager {
     /**
      * @deprecated
      */
+    @Deprecated
     void verifyIntentFilter(int id, int verificationCode, List<String> failedDomains);
 
     /**
      * @deprecated
      */
+    @Deprecated
     int getIntentVerificationStatus(String packageName, int userId);
 
     /**
      * @deprecated
      */
+    @Deprecated
     boolean updateIntentVerificationStatus(String packageName, int status, int userId);
 
     /**
      * @deprecated
      */
+    @Deprecated
     ParceledListSlice getIntentFilterVerifications(String packageName);
 
     ParceledListSlice getAllIntentFilters(String packageName);
