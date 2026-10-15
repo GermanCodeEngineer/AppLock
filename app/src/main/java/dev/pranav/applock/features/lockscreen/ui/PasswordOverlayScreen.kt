@@ -1,7 +1,7 @@
 package dev.pranav.applock.features.lockscreen.ui
 
-import dev.pranav.applock.features.lockscreen.ui.AlphanumericPasswordOverlayScreen
 import android.content.Context
+import android.content.Intent
 import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
@@ -94,13 +94,22 @@ class PasswordOverlayActivity: FragmentActivity() {
             this,
             object: androidx.activity.OnBackPressedCallback(true) {
                 override fun handleOnBackPressed() {
-                    // Prevent back navigation to maintain security
-                    Log.d(TAG, "Back pressed ignored on AppLock overlay")
+                    Log.d(TAG, "Back pressed on PasswordOverlayActivity - exiting to Home")
+                    exitToHome()
                 }
             })
 
         setupWindow()
         loadAppNameAndSetupUI()
+    }
+
+    private fun exitToHome() {
+        val homeIntent = Intent(Intent.ACTION_MAIN).apply {
+            addCategory(Intent.CATEGORY_HOME)
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        }
+        startActivity(homeIntent)
+        finish()
     }
 
     override fun onPostCreate(savedInstanceState: Bundle?) {
@@ -142,7 +151,6 @@ class PasswordOverlayActivity: FragmentActivity() {
 
 
         val layoutParams = window.attributes
-        layoutParams.type = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
         layoutParams.width = WindowManager.LayoutParams.MATCH_PARENT
         layoutParams.height = WindowManager.LayoutParams.MATCH_PARENT
 
@@ -203,6 +211,8 @@ class PasswordOverlayActivity: FragmentActivity() {
                             PatternLockScreen(
                                 modifier = Modifier.padding(innerPadding),
                                 fromMainActivity = false,
+                                showCloseButton = true,
+                                onClose = { exitToHome() },
                                 lockedAppName = appName,
                                 triggeringPackageName = triggeringPackageNameFromIntent,
                                 onPatternAttempt = onPatternAttemptCallback
@@ -220,7 +230,7 @@ class PasswordOverlayActivity: FragmentActivity() {
                                 triggeringPackageName = triggeringPackageNameFromIntent,
                                 onPasswordAttempt = onPinAttemptCallback,
                                 showCloseButton = true,
-                                onClose = { finish() }
+                                onClose = { exitToHome() }
                             )
                         }
 
@@ -235,10 +245,10 @@ class PasswordOverlayActivity: FragmentActivity() {
                                 triggeringPackageName = triggeringPackageNameFromIntent,
                                 onPinAttempt = onPinAttemptCallback,
                                 showCloseButton = true,
-                                onClose = { finish() }
+                                onClose = { exitToHome() }
                             )
 
-                            BackHandler { }
+                            BackHandler { exitToHome() }
                         }
                     }
                 }
@@ -357,7 +367,7 @@ class PasswordOverlayActivity: FragmentActivity() {
 fun PinPasswordOverlayScreen(
     modifier: Modifier = Modifier,
     showBiometricButton: Boolean = false,
-        showQrButton: Boolean = true,
+    showQrButton: Boolean = true,
     fromMainActivity: Boolean = false,
     showCloseButton: Boolean = false,
     onClose: () -> Unit = {},
@@ -460,8 +470,7 @@ fun PinPasswordOverlayScreen(
                             passwordState = passwordState,
                             minLength = minLength,
                             showBiometricButton = showBiometricButton,
-                                                        showQrButton = showQrButton,
-                                                    showQrButton = showQrButton,
+                            showQrButton = showQrButton,
                             fromMainActivity = fromMainActivity,
                             onBiometricAuth = onBiometricAuth,
                             onAuthSuccess = onAuthSuccess,
@@ -531,6 +540,7 @@ fun PinPasswordOverlayScreen(
                         passwordState = passwordState,
                         minLength = minLength,
                         showBiometricButton = showBiometricButton,
+                        showQrButton = showQrButton,
                         fromMainActivity = fromMainActivity,
                         onBiometricAuth = onBiometricAuth,
                         onAuthSuccess = onAuthSuccess,
@@ -697,7 +707,7 @@ fun KeypadSection(
     passwordState: MutableState<String>,
     minLength: Int,
     showBiometricButton: Boolean,
-        showQrButton: Boolean = true,
+    showQrButton: Boolean = true,
     fromMainActivity: Boolean = false,
     onBiometricAuth: () -> Unit,
     onAuthSuccess: () -> Unit,
@@ -896,7 +906,6 @@ fun KeypadSection(
             buttonSpacing = buttonSpacing
         )
     }
-    }
 
     if (showQrScanner) {
         QrScannerDialog(
@@ -908,7 +917,7 @@ fun KeypadSection(
                 } else {
                     Toast.makeText(
                         context,
-                        context.getString(R.string.qr_pin_must_be_numeric),
+                        R.string.qr_pin_must_be_numeric,
                         Toast.LENGTH_SHORT
                     ).show()
                 }
