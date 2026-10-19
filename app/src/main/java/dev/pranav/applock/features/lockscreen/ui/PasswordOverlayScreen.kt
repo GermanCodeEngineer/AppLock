@@ -908,7 +908,6 @@ fun KeypadSection(
     }
 
     if (showQrScanner) {
-        // TODO: fix this. the overlay crashes when clicking on QR button (maybe because of lacking camera permisions? or other problems with qr scanning not allowed in an overlay -> maybe redirect to the app itself and then unblock the app for X minutes)
         QrScannerDialog(
             onQrCodeScanned = { scannedValue ->
                 showQrScanner = false
