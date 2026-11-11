@@ -198,7 +198,7 @@ fun AppIntroScreen(navController: NavController) {
 
     val onFinishCallback = {
         AppIntroManager.markIntroAsCompleted(context)
-        navController.navigate(Screen.SetPassword.route) {
+        navController.navigate(Screen.RecoverySetup.route) {
             launchSingleTop = true
         }
     }
@@ -496,7 +496,7 @@ fun AppIntroScreen(navController: NavController) {
         pages = allPages,
         onSkip = {
             AppIntroManager.markIntroAsCompleted(context)
-            navController.navigate(Screen.SetPassword.route) {
+            navController.navigate(Screen.RecoverySetup.route) {
                 launchSingleTop = true
             }
         },

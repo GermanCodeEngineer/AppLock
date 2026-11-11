@@ -21,6 +21,11 @@ android {
     }
 
     buildTypes {
+        getByName("debug") {
+            if (providers.gradleProperty("isolatedAuthenticationTest").orNull == "true") {
+                applicationIdSuffix = ".authtest"
+            }
+        }
         release {
             isMinifyEnabled = true
             isShrinkResources = true
@@ -72,6 +77,12 @@ dependencies {
     implementation(libs.androidx.camera.lifecycle)
     implementation(libs.androidx.camera.view)
     implementation(libs.mlkit.barcode.scanning)
+    implementation("com.google.zxing:core:3.5.4")
+
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("org.mockito:mockito-core:5.20.0")
+    androidTestImplementation("androidx.test:runner:1.7.0")
+    androidTestImplementation("androidx.test.ext:junit:1.3.0")
 
     implementation(libs.shizuku.api)
     implementation(libs.shizuku.provider)

@@ -2,6 +2,7 @@ package dev.pranav.applock.core.navigation
 
 import android.content.Context
 import dev.pranav.applock.features.appintro.domain.AppIntroManager
+import dev.pranav.applock.data.repository.AppLockRepository
 
 /**
  * Manages navigation logic and routing decisions for the application.
@@ -15,6 +16,7 @@ class NavigationManager(private val context: Context) {
     fun determineStartDestination(): String {
         return when {
             shouldShowAppIntro() -> Screen.AppIntro.route
+            !isPasswordSet() && !AppLockRepository(context).hasRecoveryPassword() -> Screen.RecoverySetup.route
             !isPasswordSet() -> Screen.SetPassword.route
             else -> Screen.PasswordOverlay.route
         }
@@ -32,25 +34,19 @@ class NavigationManager(private val context: Context) {
     }
 
     private fun isPasswordSet(): Boolean {
-        val appLockPrefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-
-        val hasPin = appLockPrefs.getString(PASSWORD_KEY, null) != null
-        val hasPattern = appLockPrefs.getString(PATTERN_KEY, null) != null
-
-        return (hasPin || hasPattern)
+        return AppLockRepository(context).hasAuthentication()
     }
 
     companion object {
-        private const val PREFS_NAME = "app_lock_prefs"
-
-        //private const val SETTINGS_PREFS_NAME = "app_lock_settings"
-        private const val PASSWORD_KEY = "password"
-        private const val PATTERN_KEY = "pattern"
-        //private const val LOCK_TYPE_KEY = "lock_type"
-
         private val ROUTES_THAT_SKIP_PASSWORD_CHECK = setOf(
             Screen.AppIntro.route,
-            Screen.SetPassword.route
+            Screen.SetPassword.route,
+            Screen.SetPasswordPattern.route,
+            Screen.SetPasswordAlphanumeric.route,
+            Screen.TotpSetup.route,
+            Screen.RecoverySetup.route,
+            Screen.RecoveryUnlock.route,
+            Screen.DeviceCredentialRecovery.route
         )
     }
 }

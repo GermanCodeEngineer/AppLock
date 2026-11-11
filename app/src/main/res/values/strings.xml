@@ -322,4 +322,37 @@ Make sure you have Shizuku installed and enabled via ADB. Tap \'Next\' to grant 
         If AppLock has helped you, please consider a small donation—any amount means the world to me and keeps this project alive.
         Thank you for believing in my work!
     </string>
+    <string name="recovery_setup_title">Set a recovery password</string>
+    <string name="recovery_setup_description">Create a separate password of at least 12 characters before continuing. Keep it somewhere safe. You can use it inside AppLock to reset your authentication if you lose access.</string>
+    <string name="recovery_unlock_title">Recover AppLock</string>
+    <string name="recovery_unlock_description">Enter your recovery password to unlock AppLock and reset your PIN, password, pattern, authenticator and biometrics. You will then set up authentication again. Your locked apps and settings will be kept.</string>
+    <string name="recovery_password_label">Recovery password</string>
+    <string name="recovery_confirm_label">Confirm recovery password</string>
+    <string name="recovery_length_error">Use at least 12 characters, up to 128.</string>
+    <string name="recovery_mismatch_error">The recovery passwords do not match.</string>
+    <string name="recovery_invalid_error">Incorrect recovery password. Try again.</string>
+    <string name="authentication_save_error">Could not save authentication. Please try again.</string>
+    <string name="recovery_save_button">Save recovery password</string>
+    <string name="recovery_reset_button">Unlock and reset authentication</string>
+    <string name="recovery_use_button">Use recovery password</string>
+    <string name="totp_setup_title">Set up authenticator</string>
+    <string name="totp_setup_description">Scan this QR code with an authenticator app, or enter the secret key manually. Use SHA-1, 6 digits and a 30-second period. Enter a code below to confirm setup.</string>
+    <string name="totp_qr_description">Authenticator setup QR code</string>
+    <string name="totp_secret_warning">Keep this secret key private. Setup only takes effect after you confirm a code.</string>
+    <string name="totp_code_label">6-digit authenticator code</string>
+    <string name="totp_invalid_code">Invalid, expired or already used code. After five incorrect attempts, wait 30 seconds. Check that your device time is automatic.</string>
+    <string name="totp_enable_button">Enable authenticator</string>
+    <string name="totp_other_method">Choose another method</string>
+    <string name="totp_unlock_title">Authenticator code</string>
+    <string name="totp_unlock_description">Enter the current 6-digit code from your authenticator app.</string>
+    <string name="totp_use_button">Use authenticator</string>
+    <string name="totp_use_biometrics">Use biometrics</string>
+    <string name="totp_settings_description">Use time-based codes as your unlock method</string>
+    <string name="recovery_forgot_password_button">Forgot password?</string>
+    <string name="recovery_legacy_description">No recovery password has been configured for this installation. Verify your Android device PIN, pattern or password to reset AppLock authentication. Your protected apps and settings will be kept. You will then create a recovery password and set up authentication again.</string>
+    <string name="recovery_device_reset_button">Reset using device screen lock</string>
+    <string name="recovery_device_prompt">Confirm your device screen lock to reset AppLock authentication.</string>
+    <string name="recovery_device_unavailable">Device screen-lock verification is unavailable. AppLock cannot reset authentication without verifying your identity.</string>
+    <string name="recovery_device_cancelled">Device verification was cancelled. Authentication has not been reset.</string>
+    <string name="recovery_device_reset_error">Could not reset authentication. If a recovery password is configured, use that password instead.</string>
 </resources>

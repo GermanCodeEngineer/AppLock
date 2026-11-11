@@ -11,6 +11,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
+import dev.pranav.applock.core.utils.appLockRepository
 import dev.pranav.applock.R
 import dev.pranav.applock.services.AppLockManager
 import dev.pranav.applock.ui.theme.AppLockTheme
@@ -48,7 +49,7 @@ class TransparentBiometricActivity: FragmentActivity() {
                     super.onAuthenticationSucceeded(result)
                     AppLockManager.reportBiometricAuthFinished()
                     AppLockManager.isLockScreenShown.set(false)
-                    lockedPackageName?.let {
+                    lockedPackageName?.takeIf { appLockRepository().isBiometricAuthEnabled() }?.let {
                         AppLockManager.temporarilyUnlockAppWithBiometrics(it)
                     }
 

@@ -1,5 +1,6 @@
 package dev.pranav.applock.features.setpassword.ui
 
+import androidx.compose.foundation.layout.navigationBarsPadding
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
@@ -178,6 +179,12 @@ fun SetPasswordScreen(
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.surfaceContainer,
+        bottomBar = {
+            TextButton(
+                onClick = { navController.navigate(Screen.TotpSetup.route) },
+                modifier = Modifier.navigationBarsPadding()
+            ) { Text(stringResource(R.string.totp_use_button)) }
+        },
         topBar = {
             if (isFirstTimeSetup && !isLandscape) {
                 TopAppBar(
@@ -370,6 +377,7 @@ fun SetPasswordScreen(
 
                                         else -> {
                                             if (passwordState == confirmPasswordState) {
+                                                appLockRepository?.setLockType(PreferencesRepository.LOCK_TYPE_PIN)
                                                 appLockRepository?.setPassword(passwordState)
                                                 Toast.makeText(
                                                     context,
@@ -629,16 +637,7 @@ fun SetPasswordScreen(
                                                     Toast.LENGTH_SHORT
                                                 ).show()
 
-                                                navController.navigate(Screen.Main.route) {
-                                                    popUpTo(Screen.SetPassword.route) {
-                                                        inclusive = true
-                                                    }
-                                                    if (isFirstTimeSetup) {
-                                                        popUpTo(Screen.AppIntro.route) {
-                                                            inclusive = true
-                                                        }
-                                                    }
-                                                }
+                                                navController.finishPasswordSetup(isFirstTimeSetup)
                                             } else {
                                                 showMismatchError = true
                                                 confirmPasswordState = ""

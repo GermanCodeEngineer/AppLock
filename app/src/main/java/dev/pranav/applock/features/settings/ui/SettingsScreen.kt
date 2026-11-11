@@ -317,6 +317,12 @@ fun SettingsScreen(
                             onClick = { navController.navigate(Screen.ChangePassword.route) }
                         ),
                         ActionSettingItem(
+                            icon = Icons.Default.Lock,
+                            title = stringResource(R.string.totp_setup_title),
+                            subtitle = stringResource(R.string.totp_settings_description),
+                            onClick = { navController.navigate(Screen.TotpSetup.route) }
+                        ),
+                        ActionSettingItem(
                             icon = Timer,
                             title = stringResource(R.string.settings_screen_unlock_duration_title),
                             subtitle = if (unlockTimeDuration > 0) {

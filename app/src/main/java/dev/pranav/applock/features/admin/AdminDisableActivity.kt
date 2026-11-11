@@ -3,6 +3,7 @@ package dev.pranav.applock.features.admin
 import android.app.admin.DevicePolicyManager
 import android.content.ComponentName
 import android.os.Bundle
+import dev.pranav.applock.features.lockscreen.ui.TotpUnlockScreen
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
@@ -64,6 +65,22 @@ class AdminDisableActivity : ComponentActivity() {
                 Scaffold { padding ->
                     val lockType = appLockRepository.getLockType()
                     when (lockType) {
+                        PreferencesRepository.LOCK_TYPE_TOTP -> {
+                            TotpUnlockScreen(
+                                modifier = Modifier.padding(padding),
+                                onClose = { finish() },
+                                onCodeAttempt = { code ->
+                                    appLockRepository.validateTotp(code).also { valid ->
+                                        if (valid) {
+                                            DeviceAdmin().setPasswordVerified(this@AdminDisableActivity, true)
+                                            appLockRepository.setAntiUninstallEnabled(false)
+                                            finish()
+                                        }
+                                    }
+                                }
+                            )
+                        }
+
                         PreferencesRepository.LOCK_TYPE_PATTERN -> {
                             AdminDisablePatternScreen(
                                 modifier = Modifier.padding(padding),

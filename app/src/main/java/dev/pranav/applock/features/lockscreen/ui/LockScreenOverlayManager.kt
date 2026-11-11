@@ -115,6 +115,29 @@ class LockScreenOverlayManager(private val context: Context):
                             val lockType = appLockRepository.getLockType()
 
                             when (lockType) {
+                                PreferencesRepository.LOCK_TYPE_TOTP -> {
+                                    TotpUnlockScreen(
+                                        lockedAppName = appName,
+                                        onClose = { onExit(); removeOverlay() },
+                                        onCodeAttempt = { code ->
+                                            appLockRepository.validateTotp(code).also { valid ->
+                                                if (valid) { onUnlock(); removeOverlay() }
+                                            }
+                                        },
+                                        onBiometricAuth = if (appLockRepository.isBiometricAuthEnabled()) {
+                                            {
+                                                val intent = Intent(context, TransparentBiometricActivity::class.java).apply {
+                                                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_NO_ANIMATION
+                                                    putExtra("locked_package", lockedPackageName)
+                                                }
+                                                AppLockManager.reportBiometricAuthStarted()
+                                                removeOverlay()
+                                                context.startActivity(intent)
+                                            }
+                                        } else null
+                                    )
+                                }
+
                                 PreferencesRepository.LOCK_TYPE_PATTERN -> {
                                     PatternLockScreen(
                                         fromMainActivity = false,

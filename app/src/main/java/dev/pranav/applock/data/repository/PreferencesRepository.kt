@@ -45,6 +45,24 @@ class PreferencesRepository(context: Context) {
         return false
     }
 
+    fun hasRecoveryPassword(): Boolean = !appLockPrefs.getString(KEY_RECOVERY_PASSWORD, null).isNullOrBlank()
+
+    fun saveRecoveryPasswordHash(hash: String): Boolean =
+        appLockPrefs.edit().putString(KEY_RECOVERY_PASSWORD, hash).commit()
+
+    fun getRecoveryPasswordHash(): String? = appLockPrefs.getString(KEY_RECOVERY_PASSWORD, null)
+
+    fun clearPrimaryCredentials() {
+        appLockPrefs.edit(commit = true) {
+            remove(KEY_PASSWORD)
+            remove(KEY_PATTERN)
+        }
+        settingsPrefs.edit(commit = true) {
+            putString(KEY_LOCK_TYPE, LOCK_TYPE_PIN)
+            putBoolean(KEY_BIOMETRIC_AUTH_ENABLED, false)
+        }
+    }
+
     fun setPattern(pattern: String) {
         appLockPrefs.edit(commit = true) { putString(KEY_PATTERN, pattern) }
     }
@@ -175,6 +193,7 @@ class PreferencesRepository(context: Context) {
         private const val PREFS_NAME_SETTINGS = "app_lock_settings"
 
         private const val KEY_PASSWORD = "password"
+        private const val KEY_RECOVERY_PASSWORD = "recovery_password_hash"
         private const val KEY_PATTERN = "pattern"
         private const val KEY_BIOMETRIC_AUTH_ENABLED = "use_biometric_auth"
         private const val KEY_DISABLE_HAPTICS = "disable_haptics"
@@ -194,6 +213,7 @@ class PreferencesRepository(context: Context) {
         private const val DEFAULT_PROTECT_ENABLED = true
         private const val DEFAULT_UNLOCK_DURATION = 0
 
+        const val LOCK_TYPE_TOTP = "totp"
         const val LOCK_TYPE_PIN = "pin"
         const val LOCK_TYPE_PATTERN = "pattern"
         const val LOCK_TYPE_PASSWORD = "password"

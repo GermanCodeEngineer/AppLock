@@ -1,5 +1,6 @@
 package dev.pranav.applock.features.setpassword.ui
 
+import androidx.compose.foundation.layout.navigationBarsPadding
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
@@ -193,6 +194,12 @@ fun AlphanumericSetPasswordScreen(
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.surfaceContainer,
+        bottomBar = {
+            TextButton(
+                onClick = { navController.navigate(Screen.TotpSetup.route) },
+                modifier = Modifier.navigationBarsPadding()
+            ) { Text(stringResource(R.string.totp_use_button)) }
+        },
         topBar = {
             TopAppBar(
                 title = {

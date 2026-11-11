@@ -2,6 +2,9 @@ package dev.pranav.applock.data.repository
 
 import android.content.Context
 import dev.pranav.applock.data.manager.BackendServiceManager
+import dev.pranav.applock.features.totp.data.TotpSecretStore
+import dev.pranav.applock.features.totp.domain.TotpService
+import dev.pranav.applock.features.recovery.domain.RecoveryPassword
 import dev.pranav.applock.services.AppLockManager
 
 /**
@@ -11,6 +14,7 @@ import dev.pranav.applock.services.AppLockManager
 class AppLockRepository(private val context: Context) {
 
     private val preferencesRepository = PreferencesRepository(context)
+    private val totpSecretStore = TotpSecretStore(context)
     private val lockedAppsRepository = LockedAppsRepository(context)
     private val backendServiceManager = BackendServiceManager()
 
@@ -51,6 +55,57 @@ class AppLockRepository(private val context: Context) {
     fun setPassword(password: String) = preferencesRepository.setPassword(password)
     fun validatePassword(inputPassword: String): Boolean =
         preferencesRepository.validatePassword(inputPassword)
+
+    // A configured TOTP lock remains configured even if its Keystore key becomes unavailable.
+    // In that case the user must recover, rather than being sent to unauthenticated setup.
+    fun hasAuthentication(): Boolean = when (getLockType()) {
+        PreferencesRepository.LOCK_TYPE_TOTP -> true
+        PreferencesRepository.LOCK_TYPE_PATTERN -> getPattern() != null
+        else -> getPassword() != null
+    }
+
+    fun validateTotp(code: String): Boolean = totpSecretStore.verifyCode(code)
+
+    fun enableTotp(secret: String, code: String): Boolean {
+        if (!hasRecoveryPassword() || !TotpService.verify(secret, code)) return false
+        if (!totpSecretStore.saveSecret(secret)) return false
+        setLockType(PreferencesRepository.LOCK_TYPE_TOTP)
+        clearUnlockSessions()
+        return true
+    }
+
+    fun hasRecoveryPassword(): Boolean = preferencesRepository.hasRecoveryPassword()
+
+    fun setRecoveryPassword(password: String): Boolean =
+        preferencesRepository.saveRecoveryPasswordHash(RecoveryPassword.hash(password))
+
+    fun recoverAuthentication(password: String): Boolean {
+        val hash = preferencesRepository.getRecoveryPasswordHash() ?: return false
+        if (!RecoveryPassword.verify(password, hash)) return false
+        resetAuthentication()
+        return true
+    }
+
+    /** Only call from a successful Android device-credential confirmation result. */
+    fun recoverLegacyAuthenticationAfterDeviceVerification(): Boolean {
+        // Once enrolled, the recovery password must be used instead of this migration fallback.
+        if (hasRecoveryPassword()) return false
+        resetAuthentication()
+        return true
+    }
+
+    private fun resetAuthentication() {
+        preferencesRepository.clearPrimaryCredentials()
+        totpSecretStore.clear()
+        clearUnlockSessions()
+    }
+
+    private fun clearUnlockSessions() {
+        getLockedApps().forEach(AppLockManager::clearAppUnlockState)
+        AppLockManager.clearTemporarilyUnlockedApp()
+        AppLockManager.appUnlockTimes.clear()
+        AppLockManager.reportBiometricAuthFinished()
+    }
 
     fun getPattern(): String? = preferencesRepository.getPattern()
     fun setPattern(pattern: String) = preferencesRepository.setPattern(pattern)

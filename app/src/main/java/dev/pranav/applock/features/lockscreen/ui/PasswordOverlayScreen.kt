@@ -207,6 +207,25 @@ class PasswordOverlayActivity: FragmentActivity() {
                 ) { innerPadding ->
                     val lockType = appLockRepository.getLockType()
                     when (lockType) {
+                        PreferencesRepository.LOCK_TYPE_TOTP -> {
+                            TotpUnlockScreen(
+                                modifier = Modifier.padding(innerPadding),
+                                lockedAppName = appName,
+                                onClose = { exitToHome() },
+                                onBiometricAuth = if (appLockRepository.isBiometricAuthEnabled()) {
+                                    { triggerBiometricPrompt() }
+                                } else null,
+                                onCodeAttempt = { code ->
+                                    appLockRepository.validateTotp(code).also { valid ->
+                                        if (valid) lockedPackageNameFromIntent?.let { pkg ->
+                                            AppLockManager.unlockApp(pkg)
+                                            finishAfterTransition()
+                                        }
+                                    }
+                                }
+                            )
+                        }
+
                         PreferencesRepository.LOCK_TYPE_PATTERN -> {
                             PatternLockScreen(
                                 modifier = Modifier.padding(innerPadding),
@@ -286,6 +305,7 @@ class PasswordOverlayActivity: FragmentActivity() {
             override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
                 super.onAuthenticationSucceeded(result)
                 isBiometricPromptShowingLocal = false
+                if (!appLockRepository.isBiometricAuthEnabled()) return
                 lockedPackageNameFromIntent?.let { pkgName ->
                     AppLockManager.temporarilyUnlockAppWithBiometrics(pkgName)
                     // Fix: Do NOT relaunch the app. Just finish the overlay to reveal the underlying activity.

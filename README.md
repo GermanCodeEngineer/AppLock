@@ -63,8 +63,9 @@ root required.
 ## Features
 
 - Material You design, adapts to your theme
-- Biometric and PIN authentication
-- Fingerprint, Face Unlock, and PIN support
+- PIN, password, pattern, authenticator (TOTP), and biometric authentication
+- Recovery password to reset authentication from inside AppLock
+- [Authentication setup and recovery](docs/authentication.md)
 - Lock any app on your device
 - Anti-uninstall protection
 - Anti-uninstall protection for user apps
