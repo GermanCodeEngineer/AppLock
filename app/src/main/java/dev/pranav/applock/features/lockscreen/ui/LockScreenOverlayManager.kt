@@ -119,6 +119,16 @@ class LockScreenOverlayManager(private val context: Context):
                                     TotpUnlockScreen(
                                         lockedAppName = appName,
                                         onClose = { onExit(); removeOverlay() },
+                                        onScanFromOverlay = {
+                                            val intent = Intent(context, PasswordOverlayActivity::class.java).apply {
+                                                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_NO_ANIMATION
+                                                putExtra("locked_package", lockedPackageName)
+                                                putExtra("triggering_package", triggeringPackageName)
+                                                putExtra("open_totp_scanner", true)
+                                            }
+                                            context.startActivity(intent)
+                                            removeOverlay()
+                                        },
                                         onCodeAttempt = { code ->
                                             appLockRepository.validateTotp(code).also { valid ->
                                                 if (valid) { onUnlock(); removeOverlay() }

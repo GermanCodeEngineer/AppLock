@@ -355,4 +355,11 @@ Make sure you have Shizuku installed and enabled via ADB. Tap \'Next\' to grant 
     <string name="recovery_device_unavailable">Device screen-lock verification is unavailable. AppLock cannot reset authentication without verifying your identity.</string>
     <string name="recovery_device_cancelled">Device verification was cancelled. Authentication has not been reset.</string>
     <string name="recovery_device_reset_error">Could not reset authentication. If a recovery password is configured, use that password instead.</string>
+    <string name="totp_share_link">Share link</string>
+    <string name="totp_share_qr">Share QR code</string>
+    <string name="totp_save_qr">Save QR image</string>
+    <string name="totp_save_link">Save link as text</string>
+    <string name="totp_export_error">Could not share or save the authenticator details.</string>
+    <string name="totp_paste_code">Paste code</string>
+    <string name="totp_input_invalid">Enter a six-digit code. QR codes must contain the current code, not the authenticator setup link.</string>
 </resources>

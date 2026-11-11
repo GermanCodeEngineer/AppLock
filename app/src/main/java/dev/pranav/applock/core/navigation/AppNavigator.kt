@@ -146,6 +146,7 @@ fun AppNavHost(navController: NavHostController, startDestination: String) {
             val lockType = application.appLockRepository.getLockType()
 
             BackHandler { activity?.finish() }
+            androidx.compose.material3.Surface(Modifier.fillMaxSize(), color = androidx.compose.material3.MaterialTheme.colorScheme.surfaceContainer) {
             Column(Modifier.fillMaxSize()) {
                 Box(Modifier.weight(1f)) {
                     when (lockType) {
@@ -158,7 +159,11 @@ fun AppNavHost(navController: NavHostController, startDestination: String) {
                                 },
                                 onBiometricAuth = if (application.appLockRepository.isBiometricAuthEnabled()) {
                                     { handleBiometricAuthentication(context, navController) }
-                                } else null
+                                } else null,
+                                recoveryLabel = stringResource(if (application.appLockRepository.hasRecoveryPassword()) R.string.recovery_use_button else R.string.recovery_forgot_password_button),
+                                onRecovery = {
+                                    navController.navigate(if (application.appLockRepository.hasRecoveryPassword()) Screen.RecoveryUnlock.route else Screen.DeviceCredentialRecovery.route)
+                                }
                             )
                         }
 
@@ -205,6 +210,7 @@ fun AppNavHost(navController: NavHostController, startDestination: String) {
                         }
                     }
                 }
+                if (lockType != PreferencesRepository.LOCK_TYPE_TOTP) {
                 val hasRecoveryPassword = application.appLockRepository.hasRecoveryPassword()
                 TextButton(
                     modifier = Modifier.align(Alignment.CenterHorizontally).navigationBarsPadding(),
@@ -214,6 +220,8 @@ fun AppNavHost(navController: NavHostController, startDestination: String) {
                 ) {
                     Text(stringResource(if (hasRecoveryPassword) R.string.recovery_use_button else R.string.recovery_forgot_password_button))
                 }
+                }
+            }
             }
         }
 

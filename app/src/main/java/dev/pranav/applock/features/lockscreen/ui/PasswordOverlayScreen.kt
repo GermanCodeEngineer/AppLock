@@ -210,6 +210,7 @@ class PasswordOverlayActivity: FragmentActivity() {
                         PreferencesRepository.LOCK_TYPE_TOTP -> {
                             TotpUnlockScreen(
                                 modifier = Modifier.padding(innerPadding),
+                                openScannerInitially = intent.getBooleanExtra("open_totp_scanner", false),
                                 lockedAppName = appName,
                                 onClose = { exitToHome() },
                                 onBiometricAuth = if (appLockRepository.isBiometricAuthEnabled()) {

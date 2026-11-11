@@ -1,12 +1,13 @@
 package dev.pranav.applock.features.setpassword.ui
 
-import androidx.compose.foundation.layout.navigationBarsPadding
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -50,7 +51,7 @@ import dev.pranav.applock.core.navigation.finishPasswordSetup
 import dev.pranav.applock.core.utils.vibrate
 import dev.pranav.applock.data.repository.PreferencesRepository
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
+@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun PatternSetPasswordScreen(
     navController: NavController,
@@ -177,12 +178,6 @@ fun PatternSetPasswordScreen(
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.surfaceContainer,
-        bottomBar = {
-            TextButton(
-                onClick = { navController.navigate(Screen.TotpSetup.route) },
-                modifier = Modifier.navigationBarsPadding()
-            ) { Text(stringResource(R.string.totp_use_button)) }
-        },
         topBar = {
             if (isFirstTimeSetup && !isLandscape) {
                 TopAppBar(
@@ -272,12 +267,15 @@ fun PatternSetPasswordScreen(
                     }
 
                     if (isFirstTimeSetup && !isVerifyOldPasswordMode && !isConfirmationMode) {
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             TextButton(onClick = { switchToPinMethod() }) {
                                 Text(stringResource(R.string.use_pin_instead))
                             }
                             TextButton(onClick = { navController.navigate(Screen.SetPasswordAlphanumeric.route) }) {
                                 Text(stringResource(R.string.use_password_button))
+                            }
+                            TextButton(onClick = { navController.navigate(Screen.TotpSetup.route) }) {
+                                Text(stringResource(R.string.totp_use_button))
                             }
                         }
                     }
@@ -458,12 +456,15 @@ fun PatternSetPasswordScreen(
                     Spacer(modifier = Modifier.height(16.dp))
 
                     if (!isVerifyOldPasswordMode && !isConfirmationMode) {
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             TextButton(onClick = { switchToPinMethod() }) {
                                 Text(stringResource(R.string.use_pin_instead))
                             }
                             TextButton(onClick = { navController.navigate(Screen.SetPasswordAlphanumeric.route) }) {
                                 Text(stringResource(R.string.use_password_button))
+                            }
+                            TextButton(onClick = { navController.navigate(Screen.TotpSetup.route) }) {
+                                Text(stringResource(R.string.totp_use_button))
                             }
                         }
                     }
