@@ -362,4 +362,13 @@ Make sure you have Shizuku installed and enabled via ADB. Tap \'Next\' to grant 
     <string name="totp_export_error">Could not share or save the authenticator details.</string>
     <string name="totp_paste_code">Paste code</string>
     <string name="totp_input_invalid">Enter a six-digit code. QR codes must contain the current code, not the authenticator setup link.</string>
+    <string name="authentication_shortcut_title">Authentication app shortcut</string>
+    <string name="authentication_shortcut_none">None selected</string>
+    <string name="authentication_shortcut_description">Choose an unlocked app to open from authentication screens. Back returns here when the selected app supports it. Protected apps are excluded.</string>
+    <string name="authentication_shortcut_search">Search apps</string>
+    <string name="authentication_shortcut_empty">No matching unlocked apps</string>
+    <string name="authentication_shortcut_disable">Disable shortcut</string>
+    <string name="authentication_shortcut_open">Open %1$s</string>
+    <string name="authentication_shortcut_unavailable">The shortcut app is unavailable. Choose another app in Settings.</string>
+    <string name="authentication_shortcut_locked">The shortcut app is protected by AppLock. Choose an unlocked app in Settings.</string>
 </resources>

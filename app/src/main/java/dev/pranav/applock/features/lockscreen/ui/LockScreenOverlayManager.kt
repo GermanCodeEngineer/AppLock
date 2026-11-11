@@ -27,6 +27,9 @@ import androidx.savedstate.SavedStateRegistryController
 import androidx.savedstate.SavedStateRegistryOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import dev.pranav.applock.core.utils.appLockRepository
+import dev.pranav.applock.core.utils.ShortcutLaunchResult
+import dev.pranav.applock.data.repository.LockedAppsRepository
+import dev.pranav.applock.ui.components.LocalAuthenticationShortcutLauncher
 import dev.pranav.applock.data.repository.PreferencesRepository
 import dev.pranav.applock.services.AppLockManager
 import dev.pranav.applock.ui.theme.AppLockTheme
@@ -73,7 +76,31 @@ class LockScreenOverlayManager(private val context: Context):
 
             setContent {
                 CompositionLocalProvider(
-                    LocalOnBackPressedDispatcherOwner provides this@LockScreenOverlayManager
+                    LocalOnBackPressedDispatcherOwner provides this@LockScreenOverlayManager,
+                    LocalAuthenticationShortcutLauncher provides {
+                        val selected = PreferencesRepository(context).getAuthenticationShortcutPackage()
+                        when {
+                            selected == null || selected == context.packageName -> ShortcutLaunchResult.UNAVAILABLE
+                            LockedAppsRepository(context).isAppLocked(selected) -> ShortcutLaunchResult.LOCKED
+                            context.packageManager.getLaunchIntentForPackage(selected) == null -> ShortcutLaunchResult.UNAVAILABLE
+                            else -> {
+                                try {
+                                    context.startActivity(Intent(context, PasswordOverlayActivity::class.java).apply {
+                                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_NO_ANIMATION
+                                        putExtra("locked_package", lockedPackageName)
+                                        putExtra("triggering_package", triggeringPackageName)
+                                        putExtra("open_authentication_shortcut", true)
+                                    })
+                                    removeOverlay()
+                                    ShortcutLaunchResult.OPENED
+                                } catch (_: android.content.ActivityNotFoundException) {
+                                    ShortcutLaunchResult.UNAVAILABLE
+                                } catch (_: SecurityException) {
+                                    ShortcutLaunchResult.UNAVAILABLE
+                                }
+                            }
+                        }
+                    }
                 ) {
                     AppLockTheme {
                         Surface(

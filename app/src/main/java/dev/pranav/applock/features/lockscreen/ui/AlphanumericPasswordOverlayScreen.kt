@@ -48,6 +48,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import dev.pranav.applock.ui.components.AuthenticationShortcutButton
 import dev.pranav.applock.R
 import dev.pranav.applock.core.utils.SecurityUtils
 import dev.pranav.applock.core.utils.appLockRepository
@@ -194,6 +195,7 @@ fun AlphanumericPasswordOverlayScreen(
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    AuthenticationShortcutButton()
                     if (showBiometricButton) {
                         FilledTonalIconButton(
                             onClick = onBiometricAuth,

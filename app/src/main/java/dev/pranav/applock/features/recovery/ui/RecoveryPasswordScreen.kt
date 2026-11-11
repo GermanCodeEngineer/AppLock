@@ -14,6 +14,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import dev.pranav.applock.ui.components.AuthenticationShortcutButton
 import dev.pranav.applock.R
 import dev.pranav.applock.core.utils.appLockRepository
 import dev.pranav.applock.features.recovery.domain.RecoveryPassword
@@ -42,6 +43,7 @@ fun RecoveryPasswordScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            AuthenticationShortcutButton(enabled = !busy)
             Text(
                 stringResource(if (isSetup) R.string.recovery_setup_title else R.string.recovery_unlock_title),
                 style = MaterialTheme.typography.headlineSmall

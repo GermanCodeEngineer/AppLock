@@ -45,6 +45,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
+import dev.pranav.applock.ui.components.AuthenticationShortcutButton
 import dev.pranav.applock.AppLockApplication
 import dev.pranav.applock.R
 import dev.pranav.applock.core.navigation.Screen
@@ -328,9 +329,12 @@ fun SetPasswordScreen(
                     verticalArrangement = Arrangement.spacedBy(buttonSpacing),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    TextButton(onClick = { showQrScanner = true }) {
-                        Icon(Icons.Default.QrCode2, contentDescription = null)
-                        Text(stringResource(R.string.scan_qr_code))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        AuthenticationShortcutButton()
+                        TextButton(onClick = { showQrScanner = true }) {
+                            Icon(Icons.Default.QrCode2, contentDescription = null)
+                            Text(stringResource(R.string.scan_qr_code))
+                        }
                     }
                     val onKeyClick: (String) -> Unit = { key ->
                         val currentActivePassword = when {
@@ -583,9 +587,12 @@ fun SetPasswordScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier.padding(horizontal = horizontalPadding)
                 ) {
-                    TextButton(onClick = { showQrScanner = true }) {
-                        Icon(Icons.Default.QrCode2, contentDescription = null)
-                        Text(stringResource(R.string.scan_qr_code))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        AuthenticationShortcutButton()
+                        TextButton(onClick = { showQrScanner = true }) {
+                            Icon(Icons.Default.QrCode2, contentDescription = null)
+                            Text(stringResource(R.string.scan_qr_code))
+                        }
                     }
                     val onKeyClick: (String) -> Unit = { key ->
                         val currentActivePassword = when {

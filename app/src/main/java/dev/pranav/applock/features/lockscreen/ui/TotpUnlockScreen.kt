@@ -17,6 +17,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import dev.pranav.applock.ui.components.AuthenticationShortcutButton
 import dev.pranav.applock.R
 import dev.pranav.applock.core.utils.appLockRepository
 import dev.pranav.applock.features.qr.ui.QrScannerDialog
@@ -85,6 +86,7 @@ fun TotpUnlockScreen(
                     color = MaterialTheme.colorScheme.error, textAlign = TextAlign.Center
                 )
                 FlowRow(horizontalArrangement = Arrangement.Center, verticalArrangement = Arrangement.Center) {
+                    AuthenticationShortcutButton()
                     TextButton(onClick = {
                         val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                         acceptCode(clipboard.primaryClip?.getItemAt(0)?.coerceToText(context)?.toString())

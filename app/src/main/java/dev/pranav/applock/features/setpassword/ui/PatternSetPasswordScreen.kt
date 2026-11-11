@@ -44,6 +44,7 @@ import androidx.navigation.NavController
 import com.mrhwsn.composelock.Dot
 import com.mrhwsn.composelock.LockCallback
 import com.mrhwsn.composelock.PatternLock
+import dev.pranav.applock.ui.components.AuthenticationShortcutButton
 import dev.pranav.applock.AppLockApplication
 import dev.pranav.applock.R
 import dev.pranav.applock.core.navigation.Screen
@@ -213,6 +214,7 @@ fun PatternSetPasswordScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
+                    AuthenticationShortcutButton()
                     Text(
                         text = when {
                             isVerifyOldPasswordMode -> "Enter current Pattern"
@@ -361,6 +363,7 @@ fun PatternSetPasswordScreen(
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
+                    AuthenticationShortcutButton()
                     Text(
                         text = when {
                             isVerifyOldPasswordMode -> stringResource(R.string.enter_current_pin_label)

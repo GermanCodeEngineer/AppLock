@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import com.mrhwsn.composelock.Dot
 import com.mrhwsn.composelock.LockCallback
 import com.mrhwsn.composelock.PatternLock
+import dev.pranav.applock.ui.components.AuthenticationShortcutButton
 import dev.pranav.applock.R
 import dev.pranav.applock.core.utils.appLockRepository
 import dev.pranav.applock.core.utils.vibrate
@@ -130,6 +131,7 @@ fun PatternLockScreen(
                             }
                         }
 
+                        AuthenticationShortcutButton()
                         if (appLockRepository.isBiometricAuthEnabled() && onBiometricAuth != null) {
                             FilledTonalIconButton(
                                 onClick = { onBiometricAuth() },
@@ -205,6 +207,7 @@ fun PatternLockScreen(
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
+                        AuthenticationShortcutButton()
                         if (appLockRepository.isBiometricAuthEnabled() && onBiometricAuth != null) {
                             FilledTonalIconButton(
                                 onClick = { onBiometricAuth() },

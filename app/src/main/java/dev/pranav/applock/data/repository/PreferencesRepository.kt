@@ -188,6 +188,16 @@ class PreferencesRepository(context: Context) {
         settingsPrefs.edit { putBoolean(KEY_LOGGING_ENABLED, enabled) }
     }
 
+    fun getAuthenticationShortcutPackage(): String? =
+        settingsPrefs.getString(KEY_AUTHENTICATION_SHORTCUT_PACKAGE, null)
+
+    fun setAuthenticationShortcutPackage(packageName: String?) {
+        settingsPrefs.edit {
+            if (packageName.isNullOrBlank()) remove(KEY_AUTHENTICATION_SHORTCUT_PACKAGE)
+            else putString(KEY_AUTHENTICATION_SHORTCUT_PACKAGE, packageName)
+        }
+    }
+
     companion object {
         private const val PREFS_NAME_APP_LOCK = "app_lock_prefs"
         private const val PREFS_NAME_SETTINGS = "app_lock_settings"
@@ -209,6 +219,7 @@ class PreferencesRepository(context: Context) {
         private const val KEY_AUTO_UNLOCK = "auto_unlock"
         private const val KEY_SHOW_SYSTEM_APPS = "show_system_apps"
         private const val KEY_LOCK_TYPE = "lock_type"
+        private const val KEY_AUTHENTICATION_SHORTCUT_PACKAGE = "authentication_shortcut_package"
 
         private const val DEFAULT_PROTECT_ENABLED = true
         private const val DEFAULT_UNLOCK_DURATION = 0

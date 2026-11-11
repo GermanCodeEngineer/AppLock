@@ -54,6 +54,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
+import dev.pranav.applock.ui.components.AuthenticationShortcutButton
 import dev.pranav.applock.AppLockApplication
 import dev.pranav.applock.R
 import dev.pranav.applock.core.navigation.Screen
@@ -197,6 +198,7 @@ fun AlphanumericSetPasswordScreen(
         containerColor = MaterialTheme.colorScheme.surfaceContainer,
         topBar = {
             TopAppBar(
+                actions = { AuthenticationShortcutButton() },
                 title = {
                     Text(
                         text = when {

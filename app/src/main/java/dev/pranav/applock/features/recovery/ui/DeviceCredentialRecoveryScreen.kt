@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import dev.pranav.applock.ui.components.AuthenticationShortcutButton
 import dev.pranav.applock.R
 import dev.pranav.applock.core.utils.appLockRepository
 import kotlinx.coroutines.Dispatchers
@@ -57,6 +58,7 @@ fun DeviceCredentialRecoveryScreen(onCompleted: () -> Unit, onBack: () -> Unit) 
             verticalArrangement = Arrangement.spacedBy(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            AuthenticationShortcutButton(enabled = !busy)
             Text(stringResource(R.string.recovery_unlock_title), style = MaterialTheme.typography.headlineSmall)
             Text(stringResource(R.string.recovery_legacy_description))
             if (keyguard?.isDeviceSecure != true) {

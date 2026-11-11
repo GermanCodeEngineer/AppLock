@@ -12,6 +12,7 @@ import dev.pranav.applock.data.repository.PreferencesRepository
 import dev.pranav.applock.features.totp.domain.TotpService
 import dev.pranav.applock.features.appintro.domain.AppIntroManager
 import dev.pranav.applock.features.lockscreen.ui.PasswordOverlayActivity
+import dev.pranav.applock.services.AppLockManager
 import org.junit.Assert.*
 import org.junit.Assume.assumeTrue
 import org.junit.Test
@@ -162,6 +163,57 @@ class AuthenticationDeviceTest {
         } finally { instrumentation.runOnMainSync { activity.finish() } }
     }
 
+    @Test fun shortcutReturnsToEachUnlockMethodWithoutUnlockingProtectedApp() {
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        val context = instrumentation.targetContext
+        assumeTrue(context.packageName.endsWith(".authtest"))
+        assumeTrue(!context.getSystemService(KeyguardManager::class.java).isKeyguardLocked)
+        val target = instrumentation.context.packageName
+        assertNotNull(context.packageManager.getLaunchIntentForPackage(target))
+        val preferences = PreferencesRepository(context)
+        val repository = AppLockRepository(context)
+        val protectedPackage = "example.shortcut.protected"
+        repository.setPassword("123456")
+        repository.setPattern("01234")
+        repository.setRecoveryPassword("shortcut test recovery passphrase")
+        repository.setBiometricAuthEnabled(false)
+        repository.removeLockedApp(target)
+        repository.addLockedApp(protectedPackage)
+        AppIntroManager.markIntroAsCompleted(context)
+        preferences.setAuthenticationShortcutPackage(target)
+        val ui = AuthenticationUi()
+        val label = context.packageManager.getApplicationLabel(context.packageManager.getApplicationInfo(target, 0)).toString()
+        val description = context.getString(R.string.authentication_shortcut_open, label)
+        try {
+            for (lockType in listOf(PreferencesRepository.LOCK_TYPE_PIN, PreferencesRepository.LOCK_TYPE_PASSWORD,
+                PreferencesRepository.LOCK_TYPE_PATTERN, PreferencesRepository.LOCK_TYPE_TOTP)) {
+                // TOTP stays configured without a secret; these tests never submit a credential.
+                repository.setLockType(lockType)
+                for (overlay in listOf(false, true)) {
+                    val activityClass = if (overlay) PasswordOverlayActivity::class.java else MainActivity::class.java
+                    val activity = instrumentation.startActivitySync(Intent(context, activityClass)
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK).putExtra("locked_package", protectedPackage))
+                    try {
+                        ui.clickDescription(description)
+                        ui.awaitNode { it.packageName?.toString() == target }
+                        ui.automation.waitForIdle(500, 5000)
+                        instrumentation.runOnMainSync { assertFalse("Authentication activity was destroyed for $lockType", activity.isFinishing || activity.isDestroyed) }
+                        assertTrue(ui.automation.performGlobalAction(android.accessibilityservice.AccessibilityService.GLOBAL_ACTION_BACK))
+                        ui.awaitNode { it.contentDescription?.toString() == description }
+                        assertTrue(repository.isAppLocked(protectedPackage))
+                        assertFalse(AppLockManager.isAppTemporarilyUnlocked(protectedPackage))
+                        assertFalse(AppLockManager.appUnlockTimes.containsKey(protectedPackage))
+                    } catch (error: AssertionError) {
+                        throw AssertionError("Shortcut round trip failed for $lockType (overlay=$overlay, destroyed=${activity.isDestroyed}, foreground=${ui.nodes().firstOrNull()?.packageName})", error)
+                    } finally { instrumentation.runOnMainSync { activity.finish() } }
+                }
+            }
+        } finally {
+            preferences.setAuthenticationShortcutPackage(null)
+            repository.removeLockedApp(protectedPackage)
+        }
+    }
+
     private class AuthenticationUi {
         val automation = InstrumentationRegistry.getInstrumentation().getUiAutomation(UiAutomation.FLAG_DONT_SUPPRESS_ACCESSIBILITY_SERVICES)
 
@@ -187,6 +239,15 @@ class AuthenticationDeviceTest {
                 Thread.sleep(100)
             }
             throw AssertionError("Authentication button did not become clickable: $text")
+        }
+        fun clickDescription(description: String) {
+            repeat(100) {
+                var node = nodes().firstOrNull { it.contentDescription?.toString() == description }
+                while (node != null && !node.isClickable && node.parent != null) node = node.parent
+                if (node != null && node.isEnabled && node.performAction(AccessibilityNodeInfo.ACTION_CLICK)) return
+                Thread.sleep(100)
+            }
+            throw AssertionError("Authentication shortcut did not become clickable: $description")
         }
         fun enter(value: String, password: Boolean = false) {
             val field = awaitNode { it.isEditable && it.isEnabled && it.isPassword == password }

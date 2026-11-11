@@ -249,6 +249,8 @@ fun SettingsScreen(
                 SectionTitle(text = stringResource(R.string.settings_screen_lock_screen_customization_title))
             }
 
+            item { AuthenticationShortcutSetting() }
+
             item {
                 SettingsGroup(
                     items = listOf(

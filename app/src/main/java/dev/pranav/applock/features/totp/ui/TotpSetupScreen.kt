@@ -26,6 +26,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.MultiFormatWriter
+import dev.pranav.applock.ui.components.AuthenticationShortcutButton
 import dev.pranav.applock.R
 import dev.pranav.applock.core.utils.appLockRepository
 import dev.pranav.applock.features.totp.domain.TotpService
@@ -71,6 +72,7 @@ fun TotpSetupScreen(onFinished: () -> Unit, onBack: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            AuthenticationShortcutButton(enabled = !busy)
             Text(stringResource(R.string.totp_setup_title), style = MaterialTheme.typography.headlineSmall)
             Text(stringResource(R.string.totp_setup_description))
             Image(qr.asImageBitmap(), stringResource(R.string.totp_qr_description), modifier = Modifier.size(240.dp))

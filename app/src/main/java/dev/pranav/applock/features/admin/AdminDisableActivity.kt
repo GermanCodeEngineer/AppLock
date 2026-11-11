@@ -3,6 +3,7 @@ package dev.pranav.applock.features.admin
 import android.app.admin.DevicePolicyManager
 import android.content.ComponentName
 import android.os.Bundle
+import dev.pranav.applock.ui.components.AuthenticationShortcutButton
 import dev.pranav.applock.features.lockscreen.ui.TotpUnlockScreen
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -304,6 +305,7 @@ fun AdminDisablePasswordScreen(
                 textAlign = TextAlign.Center
             )
 
+            AuthenticationShortcutButton()
             Spacer(modifier = Modifier.height(32.dp))
 
             OutlinedTextField(

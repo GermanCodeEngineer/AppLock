@@ -51,6 +51,10 @@ import androidx.lifecycle.lifecycleScope
 import dev.pranav.applock.R
 import dev.pranav.applock.core.ui.shapes
 import dev.pranav.applock.core.utils.appLockRepository
+import dev.pranav.applock.core.utils.AuthenticationShortcut
+import dev.pranav.applock.core.utils.AuthenticationShortcutHost
+import dev.pranav.applock.core.utils.ShortcutLaunchResult
+import dev.pranav.applock.ui.components.AuthenticationShortcutButton
 import dev.pranav.applock.core.utils.vibrate
 import dev.pranav.applock.data.repository.AppLockRepository
 import dev.pranav.applock.data.repository.PreferencesRepository
@@ -62,7 +66,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.util.concurrent.Executor
 
-class PasswordOverlayActivity: FragmentActivity() {
+class PasswordOverlayActivity: FragmentActivity(), AuthenticationShortcutHost {
     private lateinit var executor: Executor
     private lateinit var biometricPrompt: BiometricPrompt
     private lateinit var promptInfo: BiometricPrompt.PromptInfo
@@ -72,6 +76,8 @@ class PasswordOverlayActivity: FragmentActivity() {
 
     private var isBiometricPromptShowingLocal = false
     private var appName: String = ""
+    private var shortcutInFront = false
+    private var openShortcutOnResume = false
 
     private val TAG = "PasswordOverlayActivity"
 
@@ -80,6 +86,8 @@ class PasswordOverlayActivity: FragmentActivity() {
 
         lockedPackageNameFromIntent = intent.getStringExtra("locked_package")
         triggeringPackageNameFromIntent = intent.getStringExtra("triggering_package")
+        shortcutInFront = savedInstanceState?.getBoolean("shortcut_in_front") ?: false
+        openShortcutOnResume = savedInstanceState == null && intent.getBooleanExtra("open_authentication_shortcut", false)
         if (lockedPackageNameFromIntent == null) {
             Log.e(TAG, "No locked_package name provided in intent. Finishing.")
             finishAffinity()
@@ -120,9 +128,42 @@ class PasswordOverlayActivity: FragmentActivity() {
     override fun onPostResume() {
         super.onPostResume()
         setupBiometricPromptInternal()
+        if (openShortcutOnResume) {
+            openShortcutOnResume = false
+            val result = openAuthenticationShortcut()
+            if (result != ShortcutLaunchResult.OPENED) {
+                Toast.makeText(this, if (result == ShortcutLaunchResult.LOCKED) R.string.authentication_shortcut_locked
+                    else R.string.authentication_shortcut_unavailable, Toast.LENGTH_LONG).show()
+            }
+            return
+        }
         if (appLockRepository.isBiometricAuthEnabled()) {
             triggerBiometricPrompt()
         }
+    }
+
+    override fun openAuthenticationShortcut(): ShortcutLaunchResult {
+        // Set before startActivity: onPause/onStop may follow immediately.
+        shortcutInFront = true
+        return AuthenticationShortcut.launch(this).also {
+            if (it != ShortcutLaunchResult.OPENED) shortcutInFront = false
+        }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.putBoolean("shortcut_in_front", shortcutInFront)
+        super.onSaveInstanceState(outState)
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        lockedPackageNameFromIntent = intent.getStringExtra("locked_package")
+        triggeringPackageNameFromIntent = intent.getStringExtra("triggering_package")
+        shortcutInFront = false
+        openShortcutOnResume = intent.getBooleanExtra("open_authentication_shortcut", false)
+        if (lockedPackageNameFromIntent == null) { finish(); return }
+        loadAppNameAndSetupUI()
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
@@ -318,6 +359,7 @@ class PasswordOverlayActivity: FragmentActivity() {
 
     override fun onResume() {
         super.onResume()
+        shortcutInFront = false
         AppLockManager.isLockScreenShown.set(true) // Set to true when activity is visible
         lifecycleScope.launch {
             applyUserPreferences()
@@ -367,9 +409,9 @@ class PasswordOverlayActivity: FragmentActivity() {
         if (isChangingConfigurations) {
             return
         }
-        Log.d(TAG, "Overlay stopped; finishing lock overlay")
+        Log.d(TAG, "Overlay stopped; preserving for shortcut: $shortcutInFront")
         AppLockManager.isLockScreenShown.set(false)
-        if (!isFinishing && !isDestroyed) {
+        if (!shortcutInFront && !isFinishing && !isDestroyed) {
             finish()
         }
     }
@@ -737,6 +779,7 @@ fun KeypadSection(
     onPinIncorrect: () -> Unit
 ) {
     val context = LocalContext.current
+    val hasShortcut = remember(context) { PreferencesRepository(context).getAuthenticationShortcutPackage() != null }
     var showQrScanner by remember { mutableStateOf(false) }
     val configuration = LocalConfiguration.current
     val windowInfo = LocalWindowInfo.current
@@ -778,12 +821,13 @@ fun KeypadSection(
             buttonSpacing,
             horizontalPadding,
             showBiometricButton,
-            showQrButton
+            showQrButton,
+            hasShortcut
         ) {
             if (isLandscape) {
                 val availableLandscapeHeight = screenHeightDp * 0.8f
                 val totalVerticalSpacing = buttonSpacing * 3
-                val actionButtonAllowance = if (showBiometricButton || showQrButton) 60.dp else 0.dp
+                val actionButtonAllowance = if (showBiometricButton || showQrButton || hasShortcut) 60.dp else 0.dp
                 val heightBasedSize =
                     (availableLandscapeHeight - totalVerticalSpacing - actionButtonAllowance) / 4f
 
@@ -801,7 +845,7 @@ fun KeypadSection(
                 val totalVerticalSpacing = buttonSpacing * 3
                 // If biometric button is shown, it takes extra space, but it's floating or above?
                 // In the current layout, it's inside the column at the top.
-                val actionButtonAllowance = if (showBiometricButton || showQrButton) 60.dp else 0.dp
+                val actionButtonAllowance = if (showBiometricButton || showQrButton || hasShortcut) 60.dp else 0.dp
                 val heightBasedSize =
                     (availableHeight - totalVerticalSpacing - actionButtonAllowance) / 4f
 
@@ -861,12 +905,13 @@ fun KeypadSection(
                 .padding(bottom = 8.dp)
         }
     ) {
-        if (showBiometricButton || showQrButton) {
+        if (showBiometricButton || showQrButton || hasShortcut) {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.height(44.dp)
             ) {
+                AuthenticationShortcutButton()
                 if (showBiometricButton) {
                     FilledTonalIconButton(
                         onClick = onBiometricAuth,
